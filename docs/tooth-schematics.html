@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>شماتیک دندان‌ها — قدامی و خلفی | DentalPro</title>
+<style>
+  :root{
+    --bg:#05080f; --panel:#0b1220; --panel2:#111c2e; --line:#1e293b; --line2:#334155;
+    --txt:#f1f5f9; --dim:#94a3b8; --dim2:#64748b; --accent:#38bdf8;
+    --enamel:#fffdf7; --enamel2:#e8e3d6; --enamel3:#cfc9b8;
+    --dentin:#efe2c6; --dentin2:#d8c6a1; --dentin3:#b39c74;
+    --outline:#5c4d3f; --pulp:#c0392b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;padding:16px;background:var(--bg);color:var(--txt);
+    font-family:"Vazirmatn","Segoe UI",Tahoma,sans-serif;font-size:14px}
+  .wrap{max-width:1400px;margin:0 auto}
+  h1{font-size:18px;margin:0 0 3px}
+  .sub{color:var(--dim);font-size:11.5px;margin-bottom:13px;line-height:1.7}
+  code{background:var(--panel2);padding:1px 5px;border-radius:4px;font-size:10.5px;color:var(--accent)}
+  .bar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+  .bar button{background:var(--panel);color:var(--dim);border:1px solid var(--line);
+    border-radius:9px;padding:8px 14px;cursor:pointer;font-family:inherit;font-size:12.5px;font-weight:700}
+  .bar button.on{background:rgba(56,189,248,.15);color:var(--accent);border-color:var(--accent)}
+  .spacer{flex:1}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px}
+  .card h2{font-size:12.5px;margin:0 0 9px;color:var(--accent);font-weight:700;
+    display:flex;justify-content:space-between;align-items:center;gap:6px}
+  label{display:block;font-size:10.5px;color:var(--dim);margin:10px 0 4px}
+  .seg{display:flex;gap:5px}
+  .seg button{flex:1;background:var(--panel2);color:var(--dim);border:1px solid var(--line2);
+    border-radius:7px;padding:6px 3px;cursor:pointer;font-family:inherit;font-size:11.5px;font-weight:700}
+  .seg button.on{background:rgba(56,189,248,.18);color:var(--accent);border-color:var(--accent)}
+  .chk{display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--dim);margin-top:7px;cursor:pointer}
+  .chk input{accent-color:var(--accent);cursor:pointer}
+  .badge{background:var(--line);color:var(--accent);border-radius:6px;padding:3px 7px;
+    font-size:9.5px;font-weight:700;white-space:nowrap}
+  .note{font-size:9.5px;color:var(--dim2);line-height:1.8;margin-top:8px}
+  .note b{color:var(--dim)}
+  .hide{display:none!important}
+
+  /* ---------- گالری ---------- */
+  .galopts{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;
+    background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px;margin-bottom:12px}
+  .galopts > div{min-width:150px}
+  .galopts label{margin-top:0}
+  .quadsec{margin-bottom:16px}
+  .quadhead{display:flex;align-items:center;gap:8px;margin:0 0 8px}
+  .quadhead h3{font-size:12.5px;margin:0;color:var(--txt);font-weight:800}
+  .quadhead .tag{font-size:9.5px;color:var(--dim2);background:var(--panel2);
+    border:1px solid var(--line2);border-radius:5px;padding:2px 7px}
+  .quadhead .rule{flex:1;height:1px;background:var(--line)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:9px}
+  .tcard{background:var(--panel);border:1px solid var(--line);border-radius:11px;
+    padding:8px;cursor:pointer;transition:border-color .12s,transform .12s}
+  .tcard:hover{border-color:var(--accent);transform:translateY(-2px)}
+  .tcard .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:2px}
+  .tcard .num{font-size:14px;font-weight:800;color:var(--txt)}
+  .tcard .typ{font-size:8.5px;color:var(--dim2)}
+  .tcard .svgbox{background:#04070d;border-radius:7px;margin:5px 0;display:flex;justify-content:center}
+  .tcard .stats{display:flex;gap:4px;flex-wrap:wrap}
+  .tcard .st{font-size:8.5px;border-radius:4px;padding:1px 5px;font-weight:700;
+    background:var(--panel2);color:var(--dim);border:1px solid var(--line2)}
+  .tcard .st.c{color:var(--accent);border-color:rgba(56,189,248,.35)}
+  .tcard .st.r{color:#22c55e;border-color:rgba(34,197,94,.3)}
+  .tcard .st.o{color:#f59e0b;border-color:rgba(245,158,11,.3)}
+  .dots{display:flex;gap:3px;margin-top:4px}
+  .dots i{width:8px;height:8px;border-radius:50%;display:block}
+  .dots i.opt{opacity:.35}
+
+  /* ---------- نمای تکی ---------- */
+  .layout{display:grid;grid-template-columns:264px 1fr 300px;gap:12px;align-items:start}
+  @media(max-width:1120px){.layout{grid-template-columns:250px 1fr}}
+  @media(max-width:820px){.layout{grid-template-columns:1fr}}
+  .quad{font-size:9.5px;color:var(--dim2);margin:8px 0 3px}
+  .teeth{display:grid;gap:3px}
+  .teeth button{background:var(--panel2);color:var(--dim);border:1px solid var(--line2);
+    border-radius:5px;padding:5px 0;cursor:pointer;font-size:10.5px;font-family:inherit}
+  .teeth button.on{background:var(--accent);color:#04121c;font-weight:800;border-color:var(--accent)}
+  .teeth button:disabled{opacity:.18;cursor:default}
+  .stage{background:#04070d;border-radius:10px;padding:6px;display:flex;justify-content:center}
+  .canal-item{border:1px solid var(--line);border-radius:9px;padding:7px 8px;margin-bottom:6px;background:var(--panel2)}
+  .canal-item.off{opacity:.5}
+  .ci-head{display:flex;align-items:center;gap:6px}
+  .dot{width:10px;height:10px;border-radius:50%;flex:none}
+  .ci-name{font-weight:800;font-size:12px}
+  .pill{font-size:8.5px;border-radius:4px;padding:1px 5px;font-weight:700;margin-inline-start:auto}
+  .pill.fix{background:rgba(34,197,94,.16);color:#22c55e}
+  .pill.opt{background:rgba(245,158,11,.16);color:#f59e0b}
+  .ci-meta{font-size:9px;color:var(--dim2);margin-top:3px}
+  .stepper{display:flex;align-items:center;gap:4px;margin-top:6px}
+  .stepper button{width:26px;height:26px;border-radius:6px;border:1px solid var(--line2);
+    background:#0b1220;color:var(--accent);font-size:15px;font-weight:800;cursor:pointer;
+    line-height:1;font-family:inherit;flex:none}
+  .stepper button:hover{background:rgba(56,189,248,.15)}
+  .stepper input{width:100%;background:#0b1220;color:var(--txt);border:1px solid var(--line2);
+    border-radius:6px;padding:4px;font-size:12px;font-family:inherit;text-align:center;font-weight:700}
+  .stepper .unit{font-size:9px;color:var(--dim2);flex:none}
+  .freq{display:flex;align-items:center;gap:5px;margin-top:6px;
+    background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.25);border-radius:6px;padding:4px 6px}
+  .freq input{width:52px;background:#0b1220;color:#f59e0b;border:1px solid rgba(245,158,11,.4);
+    border-radius:5px;padding:2px 4px;font-size:11px;font-family:inherit;text-align:center;font-weight:700}
+  .freq span{font-size:9px;color:#f59e0b}
+  .warn{font-size:10px;color:#f59e0b;background:rgba(245,158,11,.08);
+    border:1px solid rgba(245,158,11,.3);border-radius:7px;padding:6px 8px;margin-top:8px;line-height:1.7}
+  .legend{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .legend span{font-size:9.5px;color:var(--dim);background:var(--panel2);
+    border:1px solid var(--line2);border-radius:5px;padding:2px 6px}
+  .back{background:var(--panel2);color:var(--accent);border:1px solid var(--line2);
+    border-radius:7px;padding:5px 11px;cursor:pointer;font-family:inherit;font-size:11px;font-weight:700}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>شماتیک دندان‌ها — قدامی و خلفی</h1>
+  <div class="sub">
+    هندسه ریشه از روی <b>خودِ کانال‌ها</b> ساخته می‌شود و طول ریشه با طول کار کوتاه/بلند می‌شود.
+    داده کانال‌ها از <code>EndoAnatomyManager.kt</code>. همه ابعاد بر حسب میلی‌متر واقعی.
+  </div>
+
+  <div class="bar">
+    <button id="mGal" class="on" onclick="setMode('gal')">گالری — همه دندان‌ها</button>
+    <button id="mOne" onclick="setMode('one')">نمای تکی و تنظیمات</button>
+    <button id="mSurf" onclick="setMode('surf')">سطوح ترمیم</button>
+    <span class="spacer"></span>
+    <span class="badge" id="topBadge"></span>
+  </div>
+
+  <!-- ==================== گالری ==================== -->
+  <div id="paneGal">
+    <div class="galopts">
+      <div>
+        <label>گروه دندان</label>
+        <div class="seg">
+          <button id="gAnt" onclick="galArch('ant')">قدامی</button>
+          <button id="gPost" class="on" onclick="galArch('post')">خلفی</button>
+          <button id="gAll" onclick="galArch('all')">همه</button>
+        </div>
+      </div>
+      <div>
+        <label>فک</label>
+        <div class="seg">
+          <button id="jUp" onclick="galJaw('up')">بالا</button>
+          <button id="jLo" onclick="galJaw('lo')">پایین</button>
+          <button id="jBoth" class="on" onclick="galJaw('both')">هر دو</button>
+        </div>
+      </div>
+      <div>
+        <label>کانال‌های نمایش‌داده‌شده</label>
+        <div class="seg">
+          <button id="cFix" class="on" onclick="galCanals('fix')">فقط ثابت</button>
+          <button id="cAll" onclick="galCanals('all')">ثابت + احتمالی</button>
+        </div>
+      </div>
+      <div style="min-width:120px">
+        <label>دندان‌ها</label>
+        <label class="chk"><input type="checkbox" id="gPrim" onchange="renderGallery()"> شیری</label>
+      </div>
+      <div style="min-width:210px">
+        <label>نمایش در کارت‌ها</label>
+        <label class="chk"><input type="checkbox" id="gPulp" checked onchange="renderGallery()"> اتاقک پالپ</label>
+        <label class="chk"><input type="checkbox" id="gFurc" checked onchange="renderGallery()"> فورکا</label>
+      </div>
+    </div>
+    <div id="galBody"></div>
+    <div class="note">
+      عدد <b>کانال</b> و <b>ریشه</b> روی هر کارت از همان موتور هندسی نمای تکی می‌آید؛
+      با تغییر «ثابت / ثابت + احتمالی» هر دو عدد و خودِ شکل بازترسیم می‌شوند.
+      نقطه‌های رنگی زیر هر کارت = کانال‌های آن دندان (کم‌رنگ = احتمالی).
+      برای تنظیم طول کار و افزودن کانال احتمالی، روی کارت بزنید.
+    </div>
+  </div>
+
+  <!-- ==================== نمای تکی ==================== -->
+  <div id="paneOne" class="hide">
+    <div class="layout">
+      <div class="card">
+        <h2>انتخاب دندان <button class="back" onclick="setMode('gal')">بازگشت به گالری</button></h2>
+        <div class="seg">
+          <button id="segAnt" onclick="setArch('ant')">قدامی</button>
+          <button id="segPost" class="on" onclick="setArch('post')">خلفی</button>
+        </div>
+        <div class="quad">فک بالا</div><div class="teeth" id="gridUpper"></div>
+        <div class="quad">فک پایین</div><div class="teeth" id="gridLower"></div>
+        <label class="chk"><input type="checkbox" id="cbPrimary" onchange="onPrimary()"> دندان‌های شیری</label>
+        <label>نمایش</label>
+        <label class="chk"><input type="checkbox" id="cbRuler" checked onchange="render()"> خط‌کش میلی‌متری</label>
+        <label class="chk"><input type="checkbox" id="cbPulp" checked onchange="render()"> اتاقک پالپ و اوریفیس‌ها</label>
+        <label class="chk"><input type="checkbox" id="cbFurc" checked onchange="render()"> نشانه‌گذاری فورکا</label>
+        <label class="chk"><input type="checkbox" id="cbBone" onchange="render()"> خط استخوان و CEJ</label>
+        <label class="chk"><input type="checkbox" id="cbLabels" checked onchange="render()"> برچسب جهت‌ها</label>
+        <div class="warn" id="orientNote"></div>
+      </div>
+      <div class="card">
+        <h2>شماتیک سه‌بعدی<span class="badge" id="badge"></span></h2>
+        <div class="stage"><svg id="svgTooth" width="440" height="560"></svg></div>
+        <div class="note" id="stageNote"></div>
+      </div>
+      <div class="card">
+        <h2>کانال‌ها <span class="badge" id="canalCount"></span></h2>
+        <div id="canalList"></div>
+        <div class="note">
+          <b>ثابت</b> = همیشه حاضر، قابل حذف نیست.<br>
+          <b>احتمالی</b> = با تیک اضافه می‌شود و درصد فراوانی قابل ثبت است؛ با افزودن یا حذف آن،
+          تعداد ریشه‌ها و کل شماتیک بازترسیم می‌شود.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== سطوح ==================== -->
+  <div id="paneSurf" class="hide">
+    <div class="layout" style="grid-template-columns:264px 1fr">
+      <div class="card">
+        <h2>انتخاب دندان</h2>
+        <div class="seg">
+          <button id="sAnt" onclick="setArch('ant')">قدامی</button>
+          <button id="sPost" class="on" onclick="setArch('post')">خلفی</button>
+        </div>
+        <div class="quad">فک بالا</div><div class="teeth" id="gridUpper2"></div>
+        <div class="quad">فک پایین</div><div class="teeth" id="gridLower2"></div>
+        <div class="note">روی هر ناحیه از نمودار کلیک کنید. مزیال/دیستال بر اساس نیم‌فک آینه می‌شود.</div>
+        <div class="legend" id="surfLegend"></div>
+      </div>
+      <div class="card">
+        <h2>سطوح درگیر ترمیم<span class="badge" id="badgeSurf"></span></h2>
+        <div class="stage"><svg id="svgSurf" width="320" height="320"></svg></div>
+        <div class="note" id="surfNote"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================================
+   ۱) داده آناتومی — عیناً از EndoAnatomyManager.kt
+   ============================================================================ */
+const C=(name,min,max,avg,ref,maf,def,note)=>({name,min,max,avg,ref,maf,def,note:note||null});
+const ANATOMY={
+ 11:[C("C",21,26,23.5,"Incisal Edge","#40",true,"همیشه حاضر")],
+ 12:[C("C",20,25,22.5,"Incisal Edge","#35",true,"همیشه حاضر"),
+     C("P",20,25,22.5,"Incisal Edge","#35",false,"فراوانی ۱ الی ۳ درصد موارد در ایران")],
+ 13:[C("C",23,30,26.5,"Cusp Tip","#45",true,"همیشه حاضر"),
+     C("L",23,30,26.5,"Cusp Tip","#45",false,"فراوانی کانال دوم ۱ الی ۲ درصد موارد در ایران")],
+ 14:[C("B",19,23,21,"Buccal Cusp","#25",true,"همیشه حاضر"),
+     C("P",19,23,21,"Palatal Cusp","#25",false,"فراوانی ۸۵ درصد موارد در ایران"),
+     C("C3",18,22,20,"Cusp Tip","#25",false,"فراوانی ۲ الی ۳ درصد موارد در ایران")],
+ 15:[C("C",19,24,21.5,"Cusp Tip","#30",true,"همیشه حاضر"),
+     C("P",19,24,21.5,"Palatal Cusp","#30",false,"فراوانی ۲۵ درصد موارد در ایران")],
+ 16:[C("MB1",19,22,20.5,"MB Cusp","#30",true,"همیشه حاضر"),
+     C("MB2",18,21,19.5,"MB Cusp","#25",false,"فراوانی ۶۵ الی ۸۰ درصد موارد در ایران"),
+     C("DB",18,21,19.5,"DB Cusp","#25",true,"همیشه حاضر"),
+     C("P",20,24,22,"Palatal Cusp","#40",true,"همیشه حاضر (طولانی‌ترین کانال)")],
+ 17:[C("MB1",18,22,20,"MB Cusp","#30",true,"همیشه حاضر"),
+     C("MB2",17,21,19,"MB Cusp","#25",false,"فراوانی ۳۰ الی ۴۰ درصد موارد در ایران"),
+     C("DB",18,22,20,"DB Cusp","#25",true,"همیشه حاضر"),
+     C("P",18,22,20,"Palatal Cusp","#40",true,"همیشه حاضر")],
+ 18:[C("MB",19,22,19,"MB Cusp","#30",true),C("DB",19,22,19,"DB Cusp","#30",true),
+     C("P",19,22,19.5,"Palatal Cusp","#30",true)],
+ 31:[C("B",19,23,21,"Incisal Edge","#35",true,"همیشه حاضر"),
+     C("L",19,23,21,"Incisal Edge","#35",false,"فراوانی ۲۰ الی ۳۵ درصد موارد در ایران")],
+ 32:[C("B",20,24,22,"Incisal Edge","#35",true,"همیشه حاضر"),
+     C("L",20,24,22,"Incisal Edge","#35",false,"فراوانی ۱۵ الی ۳۰ درصد موارد در ایران")],
+ 33:[C("C",22,28,25,"Cusp Tip","#45",true,"همیشه حاضر"),
+     C("L",22,28,25,"Cusp Tip","#45",false,"فراوانی ۲ الی ۵ درصد موارد در ایران")],
+ 34:[C("B",20,24,22,"Buccal Cusp","#30",true,"همیشه حاضر"),
+     C("L",20,24,22,"Lingual Cusp","#30",false,"فراوانی ۲۵ الی ۳۰ درصد موارد در ایران")],
+ 35:[C("C",20,25,22.5,"Buccal Cusp","#30",true,"همیشه حاضر"),
+     C("L",20,25,22.5,"Lingual Cusp","#30",false,"فراوانی ۱۰ الی ۱۵ درصد موارد در ایران")],
+ 36:[C("MB",20,23,21.5,"MB Cusp","#30",true,"همیشه حاضر (بخشی از ریشه مزیال)"),
+     C("ML",20,23,21.5,"ML Cusp","#25",true,"همیشه حاضر"),
+     C("D",19,23,21,"Distal Cusp","#40",true,"همیشه حاضر"),
+     C("DB",18,22,20,"Distal Cusp","#25",false,"فراوانی ۲۵ الی ۳۵ درصد موارد در ایران (چهارمین کانال)")],
+ 37:[C("MB",18,22,20,"MB Cusp","#30",true,"همیشه حاضر"),
+     C("ML",18,22,20,"ML Cusp","#25",true,"همیشه حاضر"),
+     C("D",18,22,20,"Distal Cusp","#40",true,"همیشه حاضر"),
+     C("C-Shape",18,22,20,"Distal Cusp","#35",false,"فراوانی ۵ الی ۸ درصد موارد در ایران"),
+     C("DB",17,21,19,"Distal Cusp","#25",false,"فراوانی ۱۰ الی ۲۰ درصد موارد در ایران")],
+ 38:[C("MB",17,22,19.5,"MB Cusp","#30",true),C("ML",17,22,19.5,"ML Cusp","#25",true),
+     C("D",17,22,19,"Distal Cusp","#40",true)],
+ 51:[C("C",14,20,16,"Incisal Edge","#30",true)],
+ 52:[C("C",13,19,15,"Incisal Edge","#30",true)],
+ 53:[C("C",15,21,18,"Cusp Tip","#35",true)],
+ 54:[C("MB",13,18,15,"MB Cusp","#25",true),C("DB",13,18,15,"DB Cusp","#25",true),
+     C("P",13,18,16,"Palatal Cusp","#30",true)],
+ 55:[C("MB",14,19,16,"MB Cusp","#25",true),C("DB",14,19,16,"DB Cusp","#25",true),
+     C("P",14,19,17,"Palatal Cusp","#30",true)],
+ 71:[C("C",12,18,14,"Incisal Edge","#25",true)],
+ 72:[C("C",12.5,18.5,14.5,"Incisal Edge","#25",true)],
+ 73:[C("C",14,20,17,"Cusp Tip","#30",true)],
+ 74:[C("M",13,18,15,"Mesial Cusp","#25",true),C("D",13,18,15,"Distal Cusp","#25",true)],
+ 75:[C("M",14,19,16.5,"Mesial Cusp","#25",true),C("D",14,19,16.5,"Distal Cusp","#25",true)]
+};
+const MIRROR={21:11,22:12,23:13,24:14,25:15,26:16,27:17,28:18,
+ 41:31,42:32,43:33,44:34,45:35,46:36,47:37,48:38,
+ 61:51,62:52,63:53,64:54,65:55,81:71,82:72,83:73,84:74,85:75};
+const canon = t => ANATOMY[t] ? t : (MIRROR[t] ?? 11);
+const specsFor = t => ANATOMY[canon(t)];
+
+/* ============================================================================
+   ۲) نقشه ریشه‌ها — هر کانال به کدام ریشه تعلق دارد + هندسه واقعی (میلی‌متر)
+      xFurc = فاصله افقی مرکز ریشه از محور، در تراز فورکا
+      xApex = همان فاصله در تراز اپکس (واگرایی ریشه)
+      wFurc/wApex = عرض ریشه در آن دو تراز
+      curve = انحنای آپیکال (مثبت = به سمت دیستال/خارج)
+      plane = صفحه‌ای که واگرایی ریشه‌ها در آن دیده می‌شود
+   ============================================================================ */
+const ROOTMAP=(()=>{
+const R=(id,label,canals,xFurc,xApex,wFurc,wApex,curve)=>({id,label,canals,xFurc,xApex,wFurc,wApex,curve});
+return {
+ /* ---- قدامی بالا: تک‌ریشه ---- */
+ 11:{plane:"MD",crownW:8.6,crownH:10.5,furcBelowCej:0,type:"INC",
+     roots:[R("R","ریشه",["C"],0,0,6.2,1.3,0.5)]},
+ 12:{plane:"MD",crownW:7.0,crownH:9.5,furcBelowCej:0,type:"INC",
+     roots:[R("R","ریشه",["C","P"],0,0,5.6,1.3,0.6)]},
+ 13:{plane:"MD",crownW:7.8,crownH:10.5,furcBelowCej:0,type:"CAN",
+     roots:[R("R","ریشه",["C","L"],0,0,6.6,1.5,0.5)]},
+ /* ---- پرمولر اول بالا: دو (یا سه) ریشه، فورکا آپیکال ---- */
+ 14:{plane:"BL",crownW:7.4,crownH:8.6,furcBelowCej:7.2,type:"PM",
+     roots:[R("B","باکال",["B"],-1.5,-2.4,2.5,1.1,-0.2),
+            R("C3","میانی",["C3"],0,0,2.1,1.0,0),
+            R("P","پالاتال",["P"],1.5,2.5,2.5,1.1,0.2)]},
+ 15:{plane:"BL",crownW:7.0,crownH:8.4,furcBelowCej:0,type:"PM",
+     roots:[R("R","ریشه",["C","P"],0,0,5.2,1.2,0.3)]},
+ /* ---- مولر بالا: سه ریشه (دو باکال نزدیک، پالاتال واگرا) ---- */
+ 16:{plane:"BL",crownW:10.4,crownH:7.5,furcBelowCej:3.8,type:"MOL",
+     roots:[R("MB","مزیوباکال",["MB1","MB2"],-2.9,-4.4,3.2,1.2,0.35),
+            R("DB","دیستوباکال",["DB"],-0.6,-1.3,2.7,1.1,0.2),
+            R("P","پالاتال",["P"],2.8,4.7,3.4,1.3,-0.45)]},
+ 17:{plane:"BL",crownW:9.8,crownH:7.3,furcBelowCej:4.0,type:"MOL",
+     roots:[R("MB","مزیوباکال",["MB1","MB2"],-2.6,-3.7,3.1,1.2,0.3),
+            R("DB","دیستوباکال",["DB"],-0.5,-1.1,2.6,1.1,0.15),
+            R("P","پالاتال",["P"],2.6,4.0,3.3,1.3,-0.35)]},
+ 18:{plane:"BL",crownW:9.0,crownH:7.0,furcBelowCej:4.2,type:"MOL",
+     roots:[R("MB","مزیوباکال",["MB"],-2.2,-3.0,2.9,1.2,0.3),
+            R("DB","دیستوباکال",["DB"],-0.4,-0.9,2.5,1.1,0.15),
+            R("P","پالاتال",["P"],2.3,3.3,3.0,1.2,-0.3)]},
+ /* ---- قدامی پایین: تک‌ریشه باریک، دو کانال B/L ---- */
+ 31:{plane:"BL",crownW:5.3,crownH:9.0,furcBelowCej:0,type:"INC",
+     roots:[R("R","ریشه",["B","L"],0,0,4.4,1.1,0.4)]},
+ 32:{plane:"BL",crownW:5.9,crownH:9.5,furcBelowCej:0,type:"INC",
+     roots:[R("R","ریشه",["B","L"],0,0,4.7,1.1,0.4)]},
+ 33:{plane:"BL",crownW:6.9,crownH:11.0,furcBelowCej:0,type:"CAN",
+     roots:[R("R","ریشه",["C","L"],0,0,6.0,1.4,0.45)]},
+ 34:{plane:"BL",crownW:7.1,crownH:8.6,furcBelowCej:0,type:"PM",
+     roots:[R("R","ریشه",["B","L"],0,0,5.0,1.2,0.4)]},
+ 35:{plane:"BL",crownW:7.2,crownH:8.4,furcBelowCej:0,type:"PM",
+     roots:[R("R","ریشه",["C","L"],0,0,5.1,1.2,0.4)]},
+ /* ---- مولر پایین: دو ریشه مزیال/دیستال ---- */
+ 36:{plane:"MD",crownW:10.8,crownH:7.6,furcBelowCej:3.0,type:"MOL",
+     roots:[R("M","مزیال",["MB","ML"],-2.7,-3.8,3.6,1.3,0.55),
+            R("D","دیستال",["D","DB"],2.5,3.5,3.2,1.2,-0.25)]},
+ 37:{plane:"MD",crownW:10.2,crownH:7.4,furcBelowCej:3.2,type:"MOL",
+     roots:[R("M","مزیال",["MB","ML"],-2.5,-3.5,3.5,1.3,0.5),
+            R("D","دیستال",["D","DB","C-Shape"],2.4,3.3,3.2,1.2,-0.2)]},
+ 38:{plane:"MD",crownW:9.4,crownH:7.0,furcBelowCej:3.4,type:"MOL",
+     roots:[R("M","مزیال",["MB","ML"],-2.2,-2.9,3.3,1.2,0.45),
+            R("D","دیستال",["D"],2.1,2.8,3.0,1.2,-0.2)]},
+ /* ---- شیری ---- */
+ 51:{plane:"MD",crownW:6.5,crownH:6.2,furcBelowCej:0,type:"INC",
+     roots:[R("R","ریشه",["C"],0,0,4.6,1.1,0.4)]},
+ 52:{plane:"MD",crownW:5.1,crownH:5.6,furcBelowCej:0,type:"INC",
+     roots:[R("R","ریشه",["C"],0,0,4.0,1.0,0.4)]},
+ 53:{plane:"MD",crownW:6.9,crownH:6.5,furcBelowCej:0,type:"CAN",
+     roots:[R("R","ریشه",["C"],0,0,4.8,1.2,0.4)]},
+ 54:{plane:"BL",crownW:7.1,crownH:5.1,furcBelowCej:1.6,type:"MOL",
+     roots:[R("MB","مزیوباکال",["MB"],-2.4,-3.6,2.3,1.0,0.4),
+            R("DB","دیستوباکال",["DB"],-0.4,-1.0,2.0,0.9,0.2),
+            R("P","پالاتال",["P"],2.3,3.7,2.4,1.0,-0.4)]},
+ 55:{plane:"BL",crownW:8.2,crownH:5.7,furcBelowCej:1.8,type:"MOL",
+     roots:[R("MB","مزیوباکال",["MB"],-2.6,-3.9,2.5,1.0,0.4),
+            R("DB","دیستوباکال",["DB"],-0.4,-1.1,2.1,0.9,0.2),
+            R("P","پالاتال",["P"],2.5,4.0,2.6,1.1,-0.4)]},
+ 71:{plane:"MD",crownW:4.2,crownH:5.0,furcBelowCej:0,type:"INC",
+     roots:[R("R","ریشه",["C"],0,0,3.4,0.9,0.4)]},
+ 72:{plane:"MD",crownW:4.6,crownH:5.2,furcBelowCej:0,type:"INC",
+     roots:[R("R","ریشه",["C"],0,0,3.6,0.9,0.4)]},
+ 73:{plane:"MD",crownW:5.6,crownH:6.0,furcBelowCej:0,type:"CAN",
+     roots:[R("R","ریشه",["C"],0,0,4.4,1.1,0.4)]},
+ 74:{plane:"MD",crownW:7.9,crownH:5.7,furcBelowCej:1.5,type:"MOL",
+     roots:[R("M","مزیال",["M"],-2.6,-4.0,2.6,1.1,0.5),
+            R("D","دیستال",["D"],2.5,3.8,2.4,1.0,-0.3)]},
+ 75:{plane:"MD",crownW:9.4,crownH:5.9,furcBelowCej:1.7,type:"MOL",
+     roots:[R("M","مزیال",["M"],-3.0,-4.5,2.8,1.1,0.5),
+            R("D","دیستال",["D"],2.8,4.2,2.6,1.0,-0.3)]}
+};;
+})();
+const rootMapFor = t => ROOTMAP[canon(t)];
+
+
+
+const CANAL_COLORS=["#ef4444","#3b82f6","#22c55e","#f59e0b","#a855f7","#06b6d4"];
+const canalColor=i=>CANAL_COLORS[i%CANAL_COLORS.length];
+
+const FA_DIGITS={'\u06f0':'0','\u06f1':'1','\u06f2':'2','\u06f3':'3','\u06f4':'4',
+                 '\u06f5':'5','\u06f6':'6','\u06f7':'7','\u06f8':'8','\u06f9':'9'};
+function faToEn(s){return String(s).replace(/[\u06f0-\u06f9]/g,d=>FA_DIGITS[d]);}
+function defaultFreq(note){
+  if(!note) return 50;
+  const nums=faToEn(note).match(/\d+(\.\d+)?/g);
+  if(!nums||!nums.length) return 50;
+  const v=nums.map(Number);
+  return v.length>=2 ? Math.round((v[0]+v[1])/2) : Math.round(v[0]);
+}
+
+/* ============================================================================
+   ۳) فهرست دندان‌ها و کمکی‌ها
+   ============================================================================ */
+const Q1=[18,17,16,15,14,13,12,11], Q2=[21,22,23,24,25,26,27,28];
+const Q3=[31,32,33,34,35,36,37,38], Q4=[41,42,43,44,45,46,47,48];
+const Q5=[55,54,53,52,51], Q6=[61,62,63,64,65];
+const Q7=[71,72,73,74,75], Q8=[81,82,83,84,85];
+const UPPER_PERM=[...Q1,...Q2], LOWER_PERM=[...Q4.slice().reverse(),...Q3];
+const UPPER_PRIM=[...Q5,...Q6], LOWER_PRIM=[...Q8.slice().reverse(),...Q7];
+const isAnteriorTooth=t=>{const p=t%10;return p>=1&&p<=3;};
+const isUpperTooth=t=>{const q=Math.floor(t/10);return q===1||q===2||q===5||q===6;};
+const isLeftSide=t=>{const q=Math.floor(t/10);return q===2||q===3||q===6||q===7;};
+const typeFa=t=>{const p=t%10;const prim=Math.floor(t/10)>=5;
+  if(p<=2)return prim?"ثنایا شیری":"ثنایا";
+  if(p===3)return prim?"نیش شیری":"نیش";
+  if(p<=5)return prim?"مولر شیری":"پرمولر";
+  return prim?"مولر شیری":"مولر";};
+
+/* حالت پیش‌فرض یک دندان: ثابت‌ها روشن، طول = میانگین */
+function defaultState(tooth,includeOptional){
+  const on={},wl={},freq={};
+  specsFor(tooth).forEach(c=>{
+    on[c.name]=c.def||!!includeOptional;
+    wl[c.name]=c.avg;
+    freq[c.name]=defaultFreq(c.note);
+  });
+  return {on,wl,freq};
+}
+
+/* ============================================================================
+   ۴) موتور هندسه — تابع خالص، مشترک بین گالری و نمای تکی
+   ============================================================================ */
+function buildGeometry(tooth,on,wl){
+  const map=rootMapFor(tooth);
+  const specs=specsFor(tooth).filter(c=>on[c.name]);
+  const crownH=map.crownH;
+
+  let roots=map.roots.map(r=>({...r,specs:specs.filter(s=>r.canals.includes(s.name))}))
+                     .filter(r=>r.specs.length>0);
+  const claimed=new Set(roots.flatMap(r=>r.specs.map(s=>s.name)));
+  const orphans=specs.filter(s=>!claimed.has(s.name));
+  if(orphans.length){
+    if(!roots.length) roots=[{...map.roots[0],specs:[]}];
+    orphans.forEach((o,i)=>roots[i%roots.length].specs.push(o));
+  }
+  roots.sort((a,b)=>a.xFurc-b.xFurc);
+
+  const shrink = roots.length===1 ? 0 : (roots.length/map.roots.length);
+  roots.forEach(r=>{
+    if(roots.length===1){ r._xF=0; r._xA=0; }
+    else { r._xF=r.xFurc*(0.62+0.38*shrink); r._xA=r.xApex*(0.62+0.38*shrink); }
+  });
+  /* وقتی چند ریشه به یک ریشه فرو می‌ریزد (مثلاً ۱۴ با فقط یک کانال)، آن ریشهٔ
+     باقی‌مانده باید عرض یک ریشهٔ ادغام‌شده را داشته باشد نه عرض یک شاخهٔ باریک؛
+     وگرنه دندان مثل یک سوزن دیده می‌شود. */
+  if(roots.length<map.roots.length){
+    const k=Math.min(1.9,Math.sqrt(map.roots.length/roots.length));
+    roots.forEach(r=>{ r.wFurc*=k; r.wApex*=Math.min(k,1.35); });
+  }
+
+  const multi=roots.length>1;
+  const furcY=crownH+(multi?map.furcBelowCej:0.6);
+  const APICAL=0.75;
+  roots.forEach(r=>{
+    r.specs.forEach((s,i)=>{
+      s._wl=Math.max(6,parseFloat(wl[s.name])||s.avg);
+      const n=r.specs.length;
+      s._off=n<=1?0:(i-(n-1)/2)*Math.min(0.95,(r.wFurc*0.30));
+    });
+    r._apexY=Math.max(...r.specs.map(s=>s._wl))+APICAL;
+    r._apexY=Math.max(r._apexY,furcY+2.0);
+    /* محور ریشه دست‌کم روی ۳٫۲ میلی‌متر باز می‌شود تا در دندان‌هایی که فورکای
+       بسیار بالا دارند (مثل مولر شیری) واگرایی ناگهانی و تیز نشود */
+    r._cH=furcY-Math.max(furcY-crownH,3.2);
+  });
+  /* دهانه کانال روی کف اتاقک پالپ — اینجا محاسبه می‌شود تا هندسه خودبسنده بماند */
+  roots.forEach(r=>r.specs.forEach(s=>{
+    s._orificeX=(rootCx(r,furcY,furcY)+s._off)*0.72;
+  }));
+  const maxY=Math.max(...roots.map(r=>r._apexY));
+  return {map,specs,roots,crownH,furcY,maxY,multi};
+}
+/* محور ریشه — در تراز فورکا کاملاً پیوسته است (بدون پرش).
+   بالای فورکا: از محور دندان تا مرکز ریشه با smoothstep باز می‌شود.
+   پایین فورکا: واگرایی + انحنای آپیکال. مشتق در دو سر صفر است تا شکستگی نیفتد. */
+function rootCx(r,y,furcY){
+  if(y<=furcY){
+    const t=Math.min(1,Math.max(0,(y-r._cH)/Math.max(.001,furcY-r._cH)));
+    return r._xF*(t*t*(3-2*t));
+  }
+  const t=Math.min(1,(y-furcY)/Math.max(.001,r._apexY-furcY));
+  const e=t*t*(3-2*t);
+  return r._xF+(r._xA-r._xF)*e+r.curve*Math.pow(Math.sin(Math.PI*t),1.3);
+}
+/* بیشینه نرم: همیشه >= max(a,b) ولی بدون گوشه تیز */
+const smax=(a,b,k)=>0.5*(a+b+Math.sqrt((a-b)*(a-b)+k*k));
+function rootHw(r,y,furcY){
+  const t=Math.min(1,Math.max(0,(y-furcY)/Math.max(.001,r._apexY-furcY)));
+  const e=t*t*(3-2*t);
+  const hw=(r.wFurc/2)+((r.wApex/2)-(r.wFurc/2))*Math.pow(e,1.15);
+  const need=Math.max(0,...r.specs.map(s=>Math.abs(s._off*(1-0.35*t))))+0.62;
+  return smax(hw,need,0.30);
+}
+/* کانال همیشه نسبت به محورِ همان ریشه آفست می‌خورد، و آفست از دهانه تا
+   فورکا با smoothstep رشد می‌کند؛ چون rootCx خودش پیوسته است، مسیر کانال
+   هم در تراز فورکا هیچ شکستگی ندارد. */
+function canalX(r,s,y,furcY,orificeY){
+  const ta=Math.min(1,Math.max(0,(y-furcY)/Math.max(.001,r._apexY-furcY)));
+  const axis=rootCx(r,y,furcY);
+  if(y>=furcY) return axis+s._off*(1-0.35*ta);
+  const t=Math.min(1,Math.max(0,(y-orificeY)/Math.max(.001,furcY-orificeY)));
+  const e=t*t*(3-2*t);
+  return s._orificeX+(axis+s._off-s._orificeX)*e;
+}
+
+/* ============================================================================
+   ۵) ترسیم مشترک — همان کد برای کارت کوچک و نمای بزرگ
+   ============================================================================ */
+const NS="http://www.w3.org/2000/svg";
+const el=(n,a)=>{const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);return e;};
+const poly=p=>p.map((q,i)=>(i?"L":"M")+q[0].toFixed(2)+" "+q[1].toFixed(2)).join(" ");
+let UID=0;
+
+function drawTooth(svg,tooth,on,wl,o){
+  o=o||{};
+  const W=o.W||440,H=o.H||560,mini=!!o.mini;
+  svg.setAttribute("width",W); svg.setAttribute("height",H);
+  svg.innerHTML="";
+  const uid="u"+(++UID);
+
+  const G=buildGeometry(tooth,on,wl);
+  const {map,roots,crownH,furcY,maxY,multi}=G;
+  const upper=isUpperTooth(tooth), flipX=isLeftSide(tooth)?-1:1;
+
+  const showRuler=!!o.ruler, showPulp=o.pulp!==false, showFurc=o.furc!==false;
+  const showBone=!!o.bone, showLbl=!!o.labels;
+
+  const rulerW=showRuler?56:0;
+  const padTop=mini?8:26, padBot=mini?8:26, padSide=mini?8:16;
+  const drawW=W-rulerW-padSide*2, drawH=H-padTop-padBot;
+  const widest=Math.max(map.crownW,...roots.map(r=>Math.abs(r._xA)+r.wApex/2+1))*2;
+  const px=Math.min(drawH/(maxY+1.2), drawW/widest);
+  const cx=padSide+drawW/2;
+  const baseY=upper?(H-padBot):padTop;
+  const Y=ymm=>upper?baseY-ymm*px:baseY+ymm*px;
+  const X=xmm=>cx+xmm*px*flipX;
+  const P=(x,y)=>[X(x),Y(y)];
+  const SW=mini?0.62:1;
+
+  /* گرادیان‌ها */
+  const defs=el("defs");
+  const mkGrad=(id,x0,x1,stops)=>{
+    const g=el("linearGradient",{id,x1:X(x0),x2:X(x1),y1:0,y2:0,gradientUnits:"userSpaceOnUse"});
+    stops.forEach(([s,c])=>g.appendChild(el("stop",{offset:s,"stop-color":c})));
+    defs.appendChild(g);
+  };
+  const halfC=map.crownW/2;
+  mkGrad(uid+"c",-halfC,halfC,[["0%","var(--enamel3)"],["18%","var(--enamel2)"],
+    ["42%","var(--enamel)"],["58%","#ffffff"],["82%","var(--enamel2)"],["100%","var(--enamel3)"]]);
+  const rl=Math.min(...roots.map(r=>r._xA-r.wApex)), rr=Math.max(...roots.map(r=>r._xA+r.wApex));
+  mkGrad(uid+"r",rl,rr,[["0%","var(--dentin3)"],["20%","var(--dentin2)"],
+    ["45%","var(--dentin)"],["60%","#f7efdc"],["82%","var(--dentin2)"],["100%","var(--dentin3)"]]);
+  svg.appendChild(defs);
+
+  if(showBone){
+    const by=crownH+1.8;
+    svg.appendChild(el("line",{x1:padSide,y1:Y(by),x2:padSide+drawW,y2:Y(by),
+      stroke:"#f59e0b","stroke-opacity":.35,"stroke-width":1.4,"stroke-dasharray":"7 5"}));
+    const t=el("text",{x:padSide+3,y:Y(by)+(upper?-5:12),fill:"#f59e0b","font-size":8.5,"fill-opacity":.75});
+    t.textContent="کرست استخوان"; svg.appendChild(t);
+  }
+
+  /* ---- ریشه‌ها + فورکا -------------------------------------------------
+     سیلوئت به‌صورت «اجتماع» پاکت ریشه‌ها ساخته می‌شود. تنه بالای فورکا یکپارچه
+     است و هر دو ریشه دقیقاً در ارتفاعی از هم جدا می‌شوند که پاکت‌هایشان دیگر
+     هم‌پوشانی ندارد — همان تعریف آناتومیک فورکا. هیچ نقطه‌ای دستکاری نمی‌شود،
+     بنابراین جایی برای شکستگی خط باقی نمی‌ماند.                            */
+  const STEP=0.30;
+  /* گردنِ دندان باید به عرض واقعی ریشه‌ها ختم شود، نه به عرض تاج؛ و این گذر
+     دست‌کم روی ۲ میلی‌متر پخش شود تا در دندان‌هایی مثل ۱۴ (که فورکا تقریباً
+     چسبیده به CEJ است) لبه به‌صورت پله افقی درنیاید. */
+  const trunkTop=furcY-Math.max(furcY-crownH,2.0);
+  const uTrunk=y=>{const t=Math.min(1,Math.max(0,(y-trunkTop)/Math.max(.001,furcY-trunkTop)));
+    return t*t*(3-2*t);};
+  /* پاکت خام هر ریشه (بدون هیچ اصلاحی) */
+  const rawL=(r,y)=>rootCx(r,y,furcY)-rootHw(r,y,furcY);
+  const rawR=(r,y)=>rootCx(r,y,furcY)+rootHw(r,y,furcY);
+  /* نیم‌عرض گردن: کمی از تاج جمع‌تر، ولی هرگز باریک‌تر از خودِ ریشه‌ها */
+  const spanAtFurc=Math.max(
+    Math.abs(rawL(roots[0],furcY)),
+    Math.abs(rawR(roots[roots.length-1],furcY)));
+  const trunkHalf=Math.max(map.crownW*0.40*0.92, spanAtFurc);
+
+  /* ارتفاع جدا شدن هر دو ریشه مجاور = اولین y که پاکت‌ها از هم فاصله می‌گیرند */
+  const splitY=[];
+  for(let i=0;i<roots.length-1;i++){
+    const a=roots[i],b=roots[i+1];
+    let ys=furcY, lim=Math.min(a._apexY,b._apexY);
+    for(let y=furcY;y<=lim;y+=0.04){ ys=y; if(rawR(a,y)<=rawL(b,y)) break; }
+    splitY.push(Math.max(furcY,Math.min(ys,lim-0.4)));
+  }
+  /* فورنیکس = سقف گرد فورکا، دقیقاً همان‌جا که دو ریشه از هم باز می‌شوند */
+  const furcPts=splitY.map((y,i)=>({
+    x:(rawR(roots[i],y)+rawL(roots[i+1],y))/2, y}));
+
+  /* دیواره داخلی از فورنیکس با پروفیل جذری باز می‌شود؛ مشتق افقی در نوک
+     بی‌نهایت است، یعنی دو دیواره در فورنیکس بر هم مماس‌اند و به‌جای گوشهٔ
+     تیزِ «V»، یک سقف کاملاً گرد ساخته می‌شود. علاوه بر آن یک شیب حداقلی
+     تضمین می‌شود تا در دندان‌هایی با ریشه‌های نزدیک، فورکا به‌صورت شکاف
+     مویی درنیاید. کنده‌کاری هرگز به کانال نزدیک‌تر از CLR نمی‌شود. */
+  const ND=2.2, MINSLOPE=0.60, CLR=0.58;
+  /* dir=+1 : دیواره چپِ ریشه (داخل ریشه سمت راست آن است) → باید <= کانال − CLR
+     dir=-1 : دیواره راستِ ریشه (داخل سمت چپ)            → باید >= کانال + CLR */
+  const canalLim=(r,y,dir)=>{
+    let lim=null;
+    r.specs.forEach(s=>{
+      if(y>s._wl+0.6) return;            /* پایین‌تر از انتهای کانال محدودیتی نیست */
+      const cx=canalX(r,s,y,furcY,r._cH);
+      const v=cx-dir*CLR;
+      lim=(lim===null)?v:(dir>0?Math.min(lim,v):Math.max(lim,v));
+    });
+    return lim;
+  };
+  const notch=(r,x,F,y,dir)=>{
+    if(!F) return x;
+    const u=Math.min(1,Math.max(0,(y-F.y)/ND));
+    if(u>=1) return x;
+    const far=dir*(x-F.x);                       /* بازشدگی نهایی (علامت‌دار) */
+    const base=far*Math.sqrt(u);                 /* مماس بر سقف → گردی کامل */
+    const open=Math.max(base,MINSLOPE*(y-F.y));  /* شیب حداقلی، ضد شکاف مویی */
+    const o=(1-u)*open+u*far;                    /* در u=۱ دقیقاً به پاکت می‌رسد */
+    let w=F.x+dir*o;
+    const lim=canalLim(r,y,dir);
+    if(lim!==null) w=dir>0?Math.min(w,lim):Math.max(w,lim);
+    return w;
+  };
+  /* لبه‌های بیرونی تنه از یقه تاج به آرامی به لبه ریشه‌های کناری می‌رسند */
+  const edgeL=(r,y,outer,F)=>{const v=rawL(r,y);
+    return outer?((y<furcY)?(-trunkHalf)+(v-(-trunkHalf))*uTrunk(y):v):notch(r,v,F,y,+1);};
+  const edgeR=(r,y,outer,F)=>{const v=rawR(r,y);
+    return outer?((y<furcY)?( trunkHalf)+(v-( trunkHalf))*uTrunk(y):v):notch(r,v,F,y,-1);};
+
+  /* منحنی نرم از یک رشته نقطه (Catmull-Rom → بزیه مکعبی) */
+  const smooth=(pts,close)=>{
+    if(pts.length<2) return "";
+    let s=`M ${pts[0][0].toFixed(2)} ${pts[0][1].toFixed(2)} `;
+    for(let i=0;i<pts.length-1;i++){
+      const p0=pts[i-1]||pts[i], p1=pts[i], p2=pts[i+1], p3=pts[i+2]||p2;
+      const c1=[p1[0]+(p2[0]-p0[0])/6, p1[1]+(p2[1]-p0[1])/6];
+      const c2=[p2[0]-(p3[0]-p1[0])/6, p2[1]-(p3[1]-p1[1])/6];
+      s+=`C ${c1[0].toFixed(2)} ${c1[1].toFixed(2)} ${c2[0].toFixed(2)} ${c2[1].toFixed(2)} `
+        +`${p2[0].toFixed(2)} ${p2[1].toFixed(2)} `;
+    }
+    return s+(close?"Z":"");
+  };
+  /* نمونه‌برداری تطبیقی: نزدیک سقف فورکا انحنا بسیار زیاد است، پس گام آنجا
+     ریز می‌شود تا منحنی چندضلعی و زاویه‌دار دیده نشود.
+     توجه: لبه راست از اپکس به بالا پیموده می‌شود (اختلاف منفی)، بنابراین
+     همه‌جا از قدرمطلق استفاده می‌شود. */
+  const stepAt=(y,focus)=>{
+    if(focus==null) return STEP;
+    const d=Math.abs(y-focus);
+    return d<ND ? STEP*(0.18+0.82*Math.min(1,d/ND)) : STEP;
+  };
+  const samples=(y0,y1,f,focus)=>{
+    const out=[], dir=Math.sign(y1-y0)||1, span=Math.abs(y1-y0);
+    let y=y0, travelled=0, guard=0;
+    while(travelled<span && ++guard<20000){
+      out.push(f(y));
+      const st=Math.min(stepAt(y,focus), span-travelled);
+      if(st<=1e-9) break;
+      travelled+=st; y=y0+dir*travelled;
+    }
+    out.push(f(y1));
+    return out;
+  };
+
+  /* دور زدن سیلوئت: از یقه سمت چپ، پایین ریشه‌ها، نوک گرد، و بازگشت */
+  const path=[];
+  roots.forEach((r,i)=>{
+    const top = i===0 ? crownH : splitY[i-1];
+    const bot = i===roots.length-1 ? crownH : splitY[i];
+    const outerL = i===0, outerR = i===roots.length-1;
+    const FL = i>0 ? furcPts[i-1] : null;          /* فورنیکس سمت چپ این ریشه */
+    const FR = i<roots.length-1 ? furcPts[i] : null;
+    /* لبه چپ رو به پایین */
+    path.push(...samples(top,r._apexY,y=>P(edgeL(r,y,outerL,FL),y),FL?FL.y:null));
+    /* نوک گرد آپیکال — گام زاویه‌ای بر حسب شعاع واقعی تا روی ریشه‌های پهن هم نرم بماند */
+    const ax=rootCx(r,r._apexY,furcY), aw=rootHw(r,r._apexY,furcY);
+    const na=Math.max(6,Math.ceil((Math.PI*aw)/STEP));
+    for(let k=0;k<=na;k++){const a=Math.PI-(Math.PI*k/na);
+      path.push(P(ax+aw*Math.cos(a), r._apexY+aw*0.85*Math.sin(a)));}
+    /* لبه راست رو به بالا — تا خودِ فورنیکس، بدون سقف صاف */
+    path.push(...samples(r._apexY,bot,y=>P(edgeR(r,y,outerR,FR),y),FR?FR.y:null));
+  });
+  const d=smooth(path,false)+` L ${X(trunkHalf)} ${Y(crownH)} L ${X(-trunkHalf)} ${Y(crownH)} Z`;
+  svg.appendChild(el("path",{d,fill:`url(#${uid}r)`,stroke:"var(--outline)",
+    "stroke-width":1.7*SW,"stroke-linejoin":"round","stroke-linecap":"round"}));
+
+  /* تاج */
+  const cH=crownH, cW=map.crownW/2;
+  /* عرض سطح اکلوزال/لبه اینسیزال نسبت به بیشترین عرض تاج.
+     ثنایا لبهٔ پهن و تقریباً صاف دارد (نه نوک‌تیز)؛ نیش تنها دندانی است که
+     به یک کاسپ ختم می‌شود. */
+  const occ=cW*(map.type==="MOL"?0.80:map.type==="PM"?0.68:map.type==="CAN"?0.40:0.74);
+  /* تاج دقیقاً از همان عرضِ گردن شروع می‌شود تا در CEJ پله نیفتد، سپس تا
+     برجستگی خط کانتور باز می‌شود و بعد به سطح اکلوزال می‌رسد. */
+  const neck=Math.min(trunkHalf,cW*0.95);
+  let cd=`M ${X(-neck)} ${Y(cH)} C ${X(-cW*0.99)} ${Y(cH*0.80)} ${X(-cW)} ${Y(cH*0.42)} ${X(-occ)} ${Y(cH*0.10)} `;
+  if(map.type==="MOL"){
+    const n=4,st=(occ*2)/n;
+    for(let i=0;i<n;i++){const x0=-occ+st*i,x1=x0+st;
+      cd+=`Q ${X((x0+x1)/2)} ${Y(-0.55)} ${X(x1)} ${Y(cH*0.10)} `;}
+  }else if(map.type==="PM"){
+    cd+=`Q ${X(-occ*0.5)} ${Y(-0.75)} ${X(0)} ${Y(cH*0.13)} Q ${X(occ*0.5)} ${Y(-0.75)} ${X(occ)} ${Y(cH*0.10)} `;
+  }else if(map.type==="CAN"){
+    cd+=`Q ${X(-occ*0.35)} ${Y(-0.3)} ${X(0)} ${Y(-1.5)} Q ${X(occ*0.35)} ${Y(-0.3)} ${X(occ)} ${Y(cH*0.10)} `;
+  }else{
+    /* ثنایا: لبهٔ اینسیزال تقریباً صاف با دو گوشهٔ گرد */
+    cd+=`Q ${X(-occ)} ${Y(-0.45)} ${X(-occ*0.72)} ${Y(-0.62)} `
+      + `L ${X(occ*0.72)} ${Y(-0.62)} `
+      + `Q ${X(occ)} ${Y(-0.45)} ${X(occ)} ${Y(cH*0.10)} `;
+  }
+  cd+=`C ${X(cW)} ${Y(cH*0.42)} ${X(cW*0.99)} ${Y(cH*0.80)} ${X(neck)} ${Y(cH)} Z`;
+  svg.appendChild(el("path",{d:cd,fill:`url(#${uid}c)`,stroke:"var(--outline)",
+    "stroke-width":1.8*SW,"stroke-linejoin":"round"}));
+  svg.appendChild(el("path",{d:`M ${X(-cW*0.62)} ${Y(cH*0.22)}
+    Q ${X(-cW*0.30)} ${Y(cH*0.10)} ${X(-cW*0.14)} ${Y(cH*0.24)}
+    L ${X(-cW*0.30)} ${Y(cH*0.86)} Q ${X(-cW*0.55)} ${Y(cH*0.80)} ${X(-cW*0.62)} ${Y(cH*0.22)} Z`,
+    fill:"#ffffff","fill-opacity":.5}));
+
+  /* پالپ */
+  const chTop=cH*0.30, chFloor=cH+(multi?0.5:0.2);
+  if(showPulp){
+    const chH=cW*(map.type==="MOL"?0.60:0.40);
+    svg.appendChild(el("path",{d:`M ${X(-chH)} ${Y(chFloor)}
+      Q ${X(-chH*0.92)} ${Y(chTop)} ${X(0)} ${Y(chTop-0.35)}
+      Q ${X(chH*0.92)} ${Y(chTop)} ${X(chH)} ${Y(chFloor)} Z`,
+      fill:"var(--pulp)","fill-opacity":.28,stroke:"var(--pulp)",
+      "stroke-opacity":.45,"stroke-width":1*SW}));
+  }
+
+  /* کانال‌ها */
+  const oi={}; specsFor(tooth).forEach((s,i)=>oi[s.name]=i);
+  const marks=[];
+  roots.forEach(r=>r.specs.forEach(s=>{
+    const col=canalColor(oi[s.name]), pts=[];
+    for(let y=chFloor-0.9;y<=s._wl+1e-6;y+=STEP){
+      const yy=Math.min(y,s._wl);
+      pts.push(P(canalX(r,s,yy,furcY,chFloor-0.9),yy));
+    }
+    const dd=poly(pts);
+    svg.appendChild(el("path",{d:dd,fill:"none",stroke:col,"stroke-opacity":.28,
+      "stroke-width":6.2*SW,"stroke-linecap":"round"}));
+    svg.appendChild(el("path",{d:dd,fill:"none",stroke:col,
+      "stroke-width":2.5*SW,"stroke-linecap":"round"}));
+    const tip=pts[pts.length-1];
+    svg.appendChild(el("circle",{cx:tip[0],cy:tip[1],r:3.6*SW,fill:col}));
+    svg.appendChild(el("circle",{cx:tip[0],cy:tip[1],r:1.5*SW,fill:"#fff"}));
+    if(showPulp&&!mini){
+      const o0=pts[0];
+      svg.appendChild(el("circle",{cx:o0[0],cy:o0[1],r:2.6,fill:"none",stroke:col,"stroke-width":1.5}));
+    }
+    marks.push({mm:s._wl,col});
+  }));
+
+  /* فورکا */
+  if(showFurc&&multi){
+    furcPts.forEach(f=>{
+      const p=P(f.x,f.y);
+      svg.appendChild(el("circle",{cx:p[0],cy:p[1],r:4.6*SW,fill:"none",
+        stroke:"#38bdf8","stroke-width":1.6*SW,"stroke-dasharray":mini?"1.6 1.3":"2.5 2"}));
+      svg.appendChild(el("circle",{cx:p[0],cy:p[1],r:1.7*SW,fill:"#38bdf8"}));
+    });
+    if(!mini){
+      const p=P(furcPts[0].x,furcPts[0].y);
+      const t=el("text",{x:p[0],y:p[1]+(upper?18:-11),fill:"#38bdf8","font-size":9,
+        "font-weight":"700","text-anchor":"middle"});
+      t.textContent=`فورکا — ${map.furcBelowCej} mm زیر CEJ`; svg.appendChild(t);
+    }
+  }
+
+  svg.appendChild(el("line",{x1:X(-cW*1.06),y1:Y(cH),x2:X(cW*1.06),y2:Y(cH),
+    stroke:"#94a3b8","stroke-opacity":.45,"stroke-width":1*SW,"stroke-dasharray":"3 3"}));
+
+  if(showLbl){
+    const md=map.plane==="MD";
+    const lL=md?(flipX>0?"دیستال":"مزیال"):(flipX>0?"باکال":"پالاتال/لینگوال");
+    const lR=md?(flipX>0?"مزیال":"دیستال"):(flipX>0?"پالاتال/لینگوال":"باکال");
+    const ly=H-10;
+    const mk=(tx,x,an)=>{const t=el("text",{x,y:ly,fill:"var(--dim2)","font-size":9.5,"text-anchor":an});
+      t.textContent=tx;svg.appendChild(t);};
+    mk("◄ "+lL,padSide,"start"); mk(lR+" ►",padSide+drawW,"end");
+    const jt=el("text",{x:cx,y:upper?16:H-10,fill:"var(--accent)","font-size":10,
+      "font-weight":"700","text-anchor":"middle"});
+    jt.textContent=upper?"فک بالا — ریشه رو به بالا":"فک پایین — ریشه رو به پایین";
+    svg.appendChild(jt);
+  }
+
+  if(showRuler){
+    const ax=W-rulerW+16;
+    svg.appendChild(el("rect",{x:ax-7,y:Math.min(Y(0),Y(maxY))-2,width:rulerW-9,
+      height:Math.abs(Y(maxY)-Y(0))+4,fill:"var(--panel2)",rx:4}));
+    svg.appendChild(el("line",{x1:ax,y1:Y(0),x2:ax,y2:Y(maxY),stroke:"#64748b","stroke-width":1.6}));
+    for(let mm=0;mm<=Math.floor(maxY);mm++){
+      const maj=mm%5===0,y=Y(mm);
+      svg.appendChild(el("line",{x1:ax,y1:y,x2:ax+(maj?12:6),y2:y,
+        stroke:maj?"#94a3b8":"#475569","stroke-width":maj?1.5:1}));
+      if(maj){const t=el("text",{x:ax+15,y:y+3.2,fill:"#94a3b8","font-size":8.5});
+        t.textContent=mm;svg.appendChild(t);}
+    }
+    const zt=el("text",{x:ax-10,y:Y(0)+(upper?12:-6),fill:"var(--accent)","font-size":8,"text-anchor":"end"});
+    zt.textContent="۰ رفرنس"; svg.appendChild(zt);
+    marks.forEach(m=>{const y=Y(m.mm);
+      svg.appendChild(el("path",{d:`M ${ax} ${y} L ${ax+11} ${y-4.6} L ${ax+11} ${y+4.6} Z`,fill:m.col}));});
+  }
+  return G;
+}
+
+/* ============================================================================
+   ۶) گالری
+   ============================================================================ */
+let GARCH="post", GJAW="both", GCAN="fix";
+function galArch(v){GARCH=v;["gAnt","gPost","gAll"].forEach(id=>document.getElementById(id).className="");
+  document.getElementById({ant:"gAnt",post:"gPost",all:"gAll"}[v]).className="on";renderGallery();}
+function galJaw(v){GJAW=v;["jUp","jLo","jBoth"].forEach(id=>document.getElementById(id).className="");
+  document.getElementById({up:"jUp",lo:"jLo",both:"jBoth"}[v]).className="on";renderGallery();}
+function galCanals(v){GCAN=v;["cFix","cAll"].forEach(id=>document.getElementById(id).className="");
+  document.getElementById(v==="fix"?"cFix":"cAll").className="on";renderGallery();}
+
+function renderGallery(){
+  const prim=document.getElementById('gPrim').checked;
+  const pulp=document.getElementById('gPulp').checked;
+  const furc=document.getElementById('gFurc').checked;
+  const optional=(GCAN==="all");
+  const body=document.getElementById('galBody'); body.innerHTML="";
+
+  const secs=[];
+  const add=(title,tag,arr)=>{
+    const f=arr.filter(t=>GARCH==="all"?true:(GARCH==="ant"?isAnteriorTooth(t):!isAnteriorTooth(t)));
+    if(f.length) secs.push({title,tag,teeth:f});
+  };
+  if(GJAW!=="lo"){
+    add("فک بالا — سمت راست بیمار","ربع "+(prim?"۵":"۱"),prim?Q5:Q1);
+    add("فک بالا — سمت چپ بیمار","ربع "+(prim?"۶":"۲"),prim?Q6:Q2);
+  }
+  if(GJAW!=="up"){
+    add("فک پایین — سمت چپ بیمار","ربع "+(prim?"۷":"۳"),prim?Q7:Q3);
+    add("فک پایین — سمت راست بیمار","ربع "+(prim?"۸":"۴"),prim?Q8:Q4);
+  }
+
+  let totT=0,totC=0;
+  secs.forEach(sec=>{
+    const wrapEl=document.createElement('div'); wrapEl.className="quadsec";
+    wrapEl.innerHTML=`<div class="quadhead"><h3>${sec.title}</h3>
+      <span class="tag">${sec.tag}</span><span class="rule"></span>
+      <span class="tag">${sec.teeth.length} دندان</span></div>`;
+    const grid=document.createElement('div'); grid.className="grid";
+    sec.teeth.forEach(t=>{
+      const st=defaultState(t,optional);
+      const specs=specsFor(t);
+      const act=specs.filter(c=>st.on[c.name]);
+      const G=buildGeometry(t,st.on,st.wl);
+      totT++; totC+=act.length;
+
+      const card=document.createElement('div'); card.className="tcard";
+      card.onclick=()=>openTooth(t);
+      card.innerHTML=`<div class="top"><span class="num">${t}</span>
+          <span class="typ">${typeFa(t)}</span></div>
+        <div class="svgbox"></div>
+        <div class="stats">
+          <span class="st c">${act.length} کانال</span>
+          <span class="st r">${G.roots.length} ریشه</span>
+          ${G.multi?`<span class="st o">فورکا ${G.map.furcBelowCej}mm</span>`:''}
+        </div>
+        <div class="dots">${specs.map((c,i)=>
+          `<i class="${st.on[c.name]?'':'opt'}" style="background:${canalColor(i)}"
+             title="${c.name}${c.def?' (ثابت)':' (احتمالی)'}"></i>`).join('')}</div>`;
+      const box=card.querySelector('.svgbox');
+      const svg=document.createElementNS(NS,"svg"); box.appendChild(svg);
+      drawTooth(svg,t,st.on,st.wl,{W:140,H:196,mini:true,pulp,furc,
+        ruler:false,bone:false,labels:false});
+      grid.appendChild(card);
+    });
+    wrapEl.appendChild(grid); body.appendChild(wrapEl);
+  });
+
+  if(!secs.length) body.innerHTML=`<div class="card note">با این فیلترها دندانی یافت نشد.</div>`;
+  document.getElementById('topBadge').textContent=
+    `${totT} دندان • ${totC} کانال • حالت ${optional?"ثابت + احتمالی":"فقط ثابت"}`;
+}
+
+/* ============================================================================
+   ۷) نمای تکی
+   ============================================================================ */
+let ARCH="post", TOOTH=16, WL={}, ON={}, FREQ={}, SURF=new Set(["O"]);
+function resetTooth(){const s=defaultState(TOOTH,false);ON=s.on;WL=s.wl;FREQ=s.freq;}
+function activeSpecs(){return specsFor(TOOTH).filter(c=>ON[c.name]);}
+function openTooth(t){TOOTH=t;ARCH=isAnteriorTooth(t)?"ant":"post";
+  document.getElementById('cbPrimary').checked=Math.floor(t/10)>=5;
+  resetTooth();setMode('one');}
+
+function drawDetail(){
+  const G=drawTooth(document.getElementById('svgTooth'),TOOTH,ON,WL,{
+    W:440,H:560,mini:false,
+    ruler:document.getElementById('cbRuler').checked,
+    pulp:document.getElementById('cbPulp').checked,
+    furc:document.getElementById('cbFurc').checked,
+    bone:document.getElementById('cbBone').checked,
+    labels:document.getElementById('cbLabels').checked});
+  const n=G.roots.length;
+  const shapeFa=n===1?"تک‌ریشه":n===2?"دو‌ریشه":n+"‌ریشه";
+  document.getElementById('badge').textContent=
+    `دندان ${TOOTH} • ${shapeFa} • ${activeSpecs().length} کانال`;
+  document.getElementById('stageNote').innerHTML=
+    `<b>ریشه‌ها:</b> ${G.roots.map(r=>`${r.label} (${r.specs.map(s=>s.name).join("، ")}) — ${r._apexY.toFixed(1)}mm`).join(" | ")}`
+    +(G.multi?`<br><b>فورکا:</b> ${G.map.furcBelowCej}mm زیر CEJ، ${G.roots.length-1} محل انشعاب.`:"")
+    +`<br>طول ریشه = بلندترین طول کارِ همان ریشه + ۰٫۷۵mm عاج آپیکال.`;
+}
+function drawCanalPanel(){
+  const box=document.getElementById('canalList'); box.innerHTML="";
+  const specs=specsFor(TOOTH), map=rootMapFor(TOOTH);
+  specs.forEach((c,i)=>{
+    const on=ON[c.name], col=canalColor(i);
+    const rootOf=(map.roots.find(r=>r.canals.includes(c.name))||{}).label||"—";
+    const div=document.createElement('div');
+    div.className="canal-item"+(on?"":" off");
+    let h=`<div class="ci-head"><span class="dot" style="background:${col}"></span>
+      <span class="ci-name">${c.name}</span>
+      <span class="pill ${c.def?'fix':'opt'}">${c.def?'ثابت':'احتمالی'}</span></div>
+      <div class="ci-meta">ریشه ${rootOf} • رفرنس ${c.ref} • MAF ${c.maf} • میانگین ${c.avg}mm (${c.min}–${c.max})</div>`;
+    if(!c.def){
+      h+=`<label class="chk"><input type="checkbox" ${on?"checked":""}
+        onchange="toggleCanal('${c.name}',this.checked)"> افزودن این کانال به شماتیک</label>`;
+      if(c.note) h+=`<div class="ci-meta" style="color:#f59e0b;margin-top:4px">${c.note}</div>`;
+      h+=`<div class="freq"><span>فراوانی ثبت‌شده:</span>
+        <input type="number" min="0" max="100" step="1" value="${FREQ[c.name]}"
+          oninput="FREQ['${c.name}']=this.value"><span>٪</span></div>`;
+    }
+    if(on){
+      h+=`<div class="stepper"><button onclick="bump('${c.name}',-0.5)">−</button>
+        <input type="number" step="0.5" min="4" max="40" value="${(+WL[c.name]).toFixed(1)}"
+          oninput="setWL('${c.name}',this.value)">
+        <button onclick="bump('${c.name}',0.5)">+</button><span class="unit">mm</span></div>`;
+    }
+    div.innerHTML=h; box.appendChild(div);
+  });
+  document.getElementById('canalCount').textContent=`${activeSpecs().length} از ${specs.length} فعال`;
+}
+function toggleCanal(n,v){ON[n]=v;render();}
+function setWL(n,v){const f=parseFloat(v);if(!isNaN(f))WL[n]=Math.min(40,Math.max(4,f));render();}
+function bump(n,d){WL[n]=Math.round(Math.min(40,Math.max(4,(+WL[n]||0)+d))*2)/2;render();}
+
+/* ============================================================================
+   ۸) سطوح ترمیم
+   ============================================================================ */
+function drawSurfaces(){
+  const svg=document.getElementById('svgSurf'); svg.innerHTML="";
+  const S=320,pad=S*0.09,L=pad,T=pad,R=S-pad,B=S-pad;
+  const iL=L+(R-L)*0.30,iR=L+(R-L)*0.70,iT=T+(B-T)*0.30,iB=T+(B-T)*0.70;
+  const ant=isAnteriorTooth(TOOTH), flip=isLeftSide(TOOTH);
+  const cc=ant?"I":"O", con=SURF.has("O")||SURF.has("I");
+  const z={
+    B :{d:`M ${L} ${T} L ${R} ${T} L ${iR} ${iT} L ${iL} ${iT} Z`,code:"B"},
+    Lg:{d:`M ${L} ${B} L ${R} ${B} L ${iR} ${iB} L ${iL} ${iB} Z`,code:"L"},
+    LT:{d:`M ${L} ${T} L ${L} ${B} L ${iL} ${iB} L ${iL} ${iT} Z`,code:flip?"M":"D"},
+    RT:{d:`M ${R} ${T} L ${R} ${B} L ${iR} ${iB} L ${iR} ${iT} Z`,code:flip?"D":"M"},
+    CT:{d:`M ${iL} ${iT} L ${iR} ${iT} L ${iR} ${iB} L ${iL} ${iB} Z`,code:cc}
+  };
+  for(const k in z){
+    const on=k==="CT"?con:SURF.has(z[k].code);
+    const p=el("path",{d:z[k].d,fill:on?"rgba(59,130,246,.85)":"#f8fafc",
+      stroke:on?"#2563eb":"#64748b","stroke-width":on?2.4:1.4,style:"cursor:pointer"});
+    p.onclick=()=>{const c=z[k].code;
+      if(k==="CT"){con?(SURF.delete("O"),SURF.delete("I")):SURF.add(c);}
+      else SURF.has(c)?SURF.delete(c):SURF.add(c);
+      render();};
+    svg.appendChild(p);
+  }
+  svg.appendChild(el("rect",{x:L,y:T,width:R-L,height:B-T,fill:"none",stroke:"#334155","stroke-width":2}));
+  if(ant) svg.appendChild(el("line",{x1:iL,y1:iB,x2:iR,y2:iT,stroke:"#94a3b8","stroke-width":1.2}));
+  const lb=(t,x,y)=>{const e2=el("text",{x,y,fill:"#475569","font-size":13,"font-weight":700,
+    "text-anchor":"middle"});e2.textContent=t;svg.appendChild(e2);};
+  lb(z.RT.code,R-17,S/2+4); lb(z.LT.code,L+17,S/2+4);
+  lb("B",S/2,T+19); lb("L",S/2,B-11); lb(cc,S/2,S/2+5);
+  const nm={M:"مزیال",D:"دیستال",O:"اکلوزال",I:"اینسیزال",B:"باکال",L:"لینگوال"};
+  document.getElementById('surfLegend').innerHTML=
+    [...SURF].sort().map(c=>`<span>${c} — ${nm[c]||c}</span>`).join("")
+    ||`<span style="color:var(--dim2)">هیچ سطحی انتخاب نشده</span>`;
+  document.getElementById('badgeSurf').textContent=
+    `دندان ${TOOTH} • ${ant?"نمای اینسیزال":"نمای اکلوزال"}`;
+  document.getElementById('surfNote').textContent=ant
+    ?"دندان قدامی: ناحیه مرکزی لبه اینسیزال (I) است و با خط قطری متمایز شده."
+    :"دندان خلفی: ناحیه مرکزی سطح اکلوزال (O) است.";
+}
+
+/* ============================================================================
+   ۹) رابط
+   ============================================================================ */
+let MODE="gal";
+function setMode(m){
+  MODE=m;
+  document.getElementById('mGal').className = m==="gal"?"on":"";
+  document.getElementById('mOne').className = m==="one"?"on":"";
+  document.getElementById('mSurf').className= m==="surf"?"on":"";
+  document.getElementById('paneGal').className  = m==="gal"?"":"hide";
+  document.getElementById('paneOne').className  = m==="one"?"":"hide";
+  document.getElementById('paneSurf').className = m==="surf"?"":"hide";
+  render();
+}
+function buildGrids(){
+  const prim=document.getElementById('cbPrimary').checked;
+  const up=prim?UPPER_PRIM:UPPER_PERM, lo=prim?LOWER_PRIM:LOWER_PERM;
+  const mk=(arr,elm)=>{
+    if(!elm)return;
+    elm.innerHTML=""; elm.style.gridTemplateColumns=`repeat(${Math.ceil(arr.length/2)},1fr)`;
+    arr.forEach(t=>{
+      const ok=ARCH==="ant"?isAnteriorTooth(t):!isAnteriorTooth(t);
+      const b=document.createElement('button');
+      b.textContent=t; b.disabled=!ok;
+      if(t===TOOTH) b.className="on";
+      b.onclick=()=>{TOOTH=t;resetTooth();render();};
+      elm.appendChild(b);
+    });
+  };
+  mk(up,document.getElementById('gridUpper'));
+  mk(lo,document.getElementById('gridLower'));
+  mk(up,document.getElementById('gridUpper2'));
+  mk(lo,document.getElementById('gridLower2'));
+}
+function setArch(a){
+  ARCH=a;
+  [["segAnt","ant"],["segPost","post"],["sAnt","ant"],["sPost","post"]].forEach(([id,v])=>{
+    const e2=document.getElementById(id); if(e2) e2.className=(a===v?"on":"");});
+  const prim=document.getElementById('cbPrimary').checked;
+  const pool=[...(prim?UPPER_PRIM:UPPER_PERM),...(prim?LOWER_PRIM:LOWER_PERM)];
+  const want=pool.filter(t=>a==="ant"?isAnteriorTooth(t):!isAnteriorTooth(t));
+  if(!want.includes(TOOTH)) TOOTH=a==="ant"?(prim?51:11):(prim?54:16);
+  resetTooth(); render();
+}
+function onPrimary(){setArch(ARCH);}
+function render(){
+  if(MODE==="gal"){renderGallery();return;}
+  buildGrids();
+  if(MODE==="one"){
+    const up=isUpperTooth(TOOTH);
+    document.getElementById('orientNote').innerHTML=
+      `دندان <b>${TOOTH}</b> — ${up?"فک بالا":"فک پایین"} / ${isLeftSide(TOOTH)?"سمت چپ بیمار":"سمت راست بیمار"}.<br>`+
+      `ریشه‌ها رو به ${up?"بالا":"پایین"} و مزیال به سمت ${isLeftSide(TOOTH)?"چپ":"راست"} ترسیم می‌شود.`;
+    drawDetail(); drawCanalPanel();
+    document.getElementById('topBadge').textContent=`دندان ${TOOTH} • ${typeFa(TOOTH)}`;
+  }else{
+    drawSurfaces();
+    document.getElementById('topBadge').textContent=`دندان ${TOOTH} • سطوح`;
+  }
+}
+resetTooth();
+renderGallery();
+</script>
+</body>
+</html>

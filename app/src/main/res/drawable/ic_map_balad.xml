@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  آیکون سرویس نقشه «بلد» (balad.ir)
+  طرح اختصاصی و ساده‌شده: سوزن نقشه با مسیر پیمایش داخلی — بدون استفاده از
+  لوگوی رسمی و دارایی‌های برند، تا مسئله‌ی حق نشر پیش نیاید.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+
+    <!-- بدنه سوزن نقشه -->
+    <path
+        android:fillColor="#00B894"
+        android:pathData="M24,3C15.16,3 8,10.16 8,19c0,11.5 14.1,24.6 14.7,25.15a2,2 0 0 0 2.6,0C25.9,43.6 40,30.5 40,19 40,10.16 32.84,3 24,3z" />
+
+    <!-- حلقه داخلی روشن -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M24,9.5A9.5,9.5 0 1 0 24,28.5A9.5,9.5 0 1 0 24,9.5z" />
+
+    <!-- مسیر پیمایش (فلش مسیریابی) -->
+    <path
+        android:fillColor="#00B894"
+        android:pathData="M29.6,13.4L18.2,18.1c-0.9,0.4 -0.8,1.7 0.1,2l4.3,1.4 1.4,4.3c0.3,0.9 1.6,1 2,0.1l4.7,-11.4c0.3,-0.8 -0.4,-1.5 -1.1,-1.1z" />
+</vector>

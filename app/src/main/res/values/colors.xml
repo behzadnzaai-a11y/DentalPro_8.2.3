@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- رنگ‌های Compose از Color.kt تأمین می‌شوند؛ این فایل فقط برای تم splash/system باقی می‌ماند -->
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <!-- پس‌زمینهٔ اسپلش، هم‌رنگِ تم نئون-کربنِ اپ (background = 0xFF0A1619) -->
+    <color name="splash_background">#FF0A1619</color>
+</resources>

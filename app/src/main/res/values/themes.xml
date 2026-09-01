@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- تمِ اصلی اپ (بعد از اسپلش) -->
+    <style name="Theme.MyApplication" parent="android:Theme.DeviceDefault.NoActionBar" />
+
+    <!--
+        تمِ اسپلشِ استاندارد (androidx core-splashscreen).
+        این تم به‌عنوان تمِ لانچِ Activity ست می‌شود تا از همان اولین لحظهٔ باز شدن،
+        به‌جای پنجرهٔ خالی، لوگو روی پس‌زمینهٔ برند دیده شود. postSplashScreenTheme
+        اپ را پس از آماده‌شدن به تمِ اصلی برمی‌گرداند.
+    -->
+    <style name="Theme.MyApplication.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@style/Theme.MyApplication</item>
+    </style>
+</resources>
