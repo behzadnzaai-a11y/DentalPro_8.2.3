@@ -8171,7 +8171,23 @@ fun LabsScreen(viewModel: DentalViewModel) {
         )
     }
 
-    val availableLabNames = (services.map { it.labName } + vendors.map { it.name }).distinct().filter { it.isNotBlank() }
+    // منبع واحد لابراتوارها در کل اپ: تعرفه خدمات + تأمین‌کننده‌ها + طرف‌حساب‌های بخش هزینه‌ها (LAB)
+    val labParties by viewModel.partyAccounts.collectAsStateWithLifecycle()
+    val availableLabNames = (
+        services.map { it.labName } +
+            vendors.map { it.name } +
+            labParties.filter { it.section.trim() == com.example.data.PartySection.LAB.key }.map { it.name }
+        ).map { it.trim() }.distinct().filter { it.isNotBlank() }
+
+    // به‌درخواست کاربر: نام خدمت لابراتوار فقط انتخابی است — فهرست استاندارد
+    // خدمات لابراتواری + عناوین تراپی‌ها (هماهنگ با بخش تراپی‌ها در کل اپ).
+    val templates by viewModel.templates.collectAsStateWithLifecycle()
+    val labServiceTitleOptions = remember(templates, services) {
+        com.example.data.LabServiceCatalog.options(
+            therapyTitles = templates.filter { !it.isDeleted }.map { it.titleFa.ifBlank { it.title } },
+            existingServiceNames = services.map { it.serviceName }
+        )
+    }
 
     Column(
         modifier = Modifier
@@ -8191,7 +8207,7 @@ fun LabsScreen(viewModel: DentalViewModel) {
                 Text(
                     if (showForm) viewModel.label("cancel")
                     else if (selectedTab == 0) viewModel.label("add_lab_order")
-                    else if (isPersian) "افزودن خدمت جدید" else "Add Lab Service"
+                    else if (isPersian) "لابراتوار جدید" else "New Lab"
                 )
             }
         }
@@ -8798,21 +8814,66 @@ fun LabsScreen(viewModel: DentalViewModel) {
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Text(if (isPersian) "تعریف خدمت و تعرفه قیمت جدید لابراتوار" else "Define New Lab Service", fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                        OutlinedTextField(
-                            value = sLabName,
-                            onValueChange = { sLabName = it },
-                            label = { Text(if (isPersian) "نام لابراتوار" else "Lab Name") },
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true
+                        Text(if (isPersian) "لابراتوار جدید و تعرفهٔ خدمات آن" else "New Lab & Its Price List", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                        Text(
+                            text = if (isPersian)
+                                "لابراتوار این‌جا یک‌بار تعریف می‌شود و در کل اپ (سفارشات و صورتحساب هزینه‌ها) همان منبع واحد است؛ خدمات به‌صورت زیرمجموعهٔ همان لابراتوار ثبت می‌شوند."
+                            else
+                                "The lab is defined once here and shared app-wide; services are stored as its sub-items.",
+                            fontSize = 10.sp,
+                            color = Color.Gray
                         )
-                        OutlinedTextField(
-                            value = sServiceName,
-                            onValueChange = { sServiceName = it },
-                            label = { Text(if (isPersian) "نام خدمت / نوع پروتز (مثلاً روکش زيركونيا)" else "Service / Prosthesis Name") },
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true
-                        )
+                        // نام لابراتوار: انتخاب از لابراتوارهای موجود یا تایپ نام جدید
+                        var sLabDropdownExpanded by remember { mutableStateOf(false) }
+                        ExposedDropdownMenuBox(
+                            expanded = sLabDropdownExpanded,
+                            onExpandedChange = { sLabDropdownExpanded = it }
+                        ) {
+                            OutlinedTextField(
+                                value = sLabName,
+                                onValueChange = { sLabName = it; sLabDropdownExpanded = true },
+                                label = { Text(if (isPersian) "نام لابراتوار (انتخاب یا نام جدید)" else "Lab Name (select or new)") },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = sLabDropdownExpanded) },
+                                modifier = Modifier.menuAnchor().fillMaxWidth(),
+                                singleLine = true
+                            )
+                            val filteredLabs = availableLabNames.filter { sLabName.isBlank() || it.contains(sLabName, ignoreCase = true) }
+                            if (filteredLabs.isNotEmpty()) {
+                                ExposedDropdownMenu(
+                                    expanded = sLabDropdownExpanded,
+                                    onDismissRequest = { sLabDropdownExpanded = false }
+                                ) {
+                                    filteredLabs.forEach { lName ->
+                                        DropdownMenuItem(text = { Text(lName) }, onClick = { sLabName = lName; sLabDropdownExpanded = false })
+                                    }
+                                }
+                            }
+                        }
+                        // نام خدمت: به‌درخواست کاربر فقط انتخابی (غیرقابل تایپ) —
+                        // فهرست استاندارد خدمات لابراتوار + عناوین تراپی‌ها برای یکپارچگی کل اپ.
+                        var sServiceDropdownExpanded by remember { mutableStateOf(false) }
+                        ExposedDropdownMenuBox(
+                            expanded = sServiceDropdownExpanded,
+                            onExpandedChange = { sServiceDropdownExpanded = it }
+                        ) {
+                            OutlinedTextField(
+                                value = sServiceName,
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { Text(if (isPersian) "نام خدمت (فقط انتخاب از لیست)" else "Service Name (select only)") },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = sServiceDropdownExpanded) },
+                                modifier = Modifier.menuAnchor().fillMaxWidth(),
+                                singleLine = true
+                            )
+                            ExposedDropdownMenu(
+                                expanded = sServiceDropdownExpanded,
+                                onDismissRequest = { sServiceDropdownExpanded = false }
+                            ) {
+                                labServiceTitleOptions.forEach { opt ->
+                                    DropdownMenuItem(text = { Text(opt) }, onClick = { sServiceName = opt; sServiceDropdownExpanded = false })
+                                }
+                            }
+                        }
                         OutlinedTextField(
                             value = sPriceStr,
                             onValueChange = { sPriceStr = it },
@@ -8870,7 +8931,30 @@ fun LabsScreen(viewModel: DentalViewModel) {
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    items(services) { serv ->
+                    // به‌درخواست کاربر: خدمات به‌صورت زیرمجموعهٔ هر لابراتوار نمایش داده می‌شوند.
+                    val groupedServices = services.groupBy { it.labName.trim() }
+                    groupedServices.keys.sortedBy { it }.forEach { gLabName ->
+                        item(key = "labheader-$gLabName") {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                modifier = Modifier.fillMaxWidth().padding(top = 4.dp)
+                            ) {
+                                Icon(Icons.Default.Science, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                                Text(
+                                    text = gLabName.ifBlank { if (isPersian) "بدون نام لابراتوار" else "Unnamed lab" },
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.sp,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Text(
+                                    text = if (isPersian) "«${groupedServices[gLabName]!!.size} خدمت»" else "(${groupedServices[gLabName]!!.size} services)",
+                                    fontSize = 10.sp,
+                                    color = Color.Gray
+                                )
+                            }
+                        }
+                        items(groupedServices[gLabName]!!.sortedBy { it.serviceName }, key = { it.id }) { serv ->
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -8882,19 +8966,6 @@ fun LabsScreen(viewModel: DentalViewModel) {
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Column(modifier = Modifier.weight(1f)) {
-                                    Surface(
-                                        color = MaterialTheme.colorScheme.primaryContainer,
-                                        shape = RoundedCornerShape(4.dp)
-                                    ) {
-                                        Text(
-                                            text = serv.labName,
-                                            fontSize = 10.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                        )
-                                    }
-                                    Spacer(modifier = Modifier.height(4.dp))
                                     Text(text = serv.serviceName, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                                     Text(
                                         text = "⏱️ تحویل امتحان فریم: ${serv.frameDeliveryDays} روز | تحویل نهایی: ${serv.finalDeliveryDays} روز",
@@ -8917,6 +8988,7 @@ fun LabsScreen(viewModel: DentalViewModel) {
                                 }
                             }
                         }
+                        }
                     }
                 }
             }
@@ -8937,7 +9009,30 @@ fun LabsScreen(viewModel: DentalViewModel) {
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     OutlinedTextField(value = eLab, onValueChange = { eLab = it }, label = { Text(if (isPersian) "نام لابراتوار" else "Lab Name") }, modifier = Modifier.fillMaxWidth())
-                    OutlinedTextField(value = eName, onValueChange = { eName = it }, label = { Text(if (isPersian) "نام خدمت" else "Service Name") }, modifier = Modifier.fillMaxWidth())
+                    // نام خدمت فقط انتخابی — هماهنگ با فهرست استاندارد و تراپی‌ها
+                    var eNameExpanded by remember { mutableStateOf(false) }
+                    ExposedDropdownMenuBox(
+                        expanded = eNameExpanded,
+                        onExpandedChange = { eNameExpanded = it }
+                    ) {
+                        OutlinedTextField(
+                            value = eName,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text(if (isPersian) "نام خدمت (فقط انتخاب از لیست)" else "Service Name (select only)") },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = eNameExpanded) },
+                            modifier = Modifier.menuAnchor().fillMaxWidth(),
+                            singleLine = true
+                        )
+                        ExposedDropdownMenu(
+                            expanded = eNameExpanded,
+                            onDismissRequest = { eNameExpanded = false }
+                        ) {
+                            labServiceTitleOptions.forEach { opt ->
+                                DropdownMenuItem(text = { Text(opt) }, onClick = { eName = opt; eNameExpanded = false })
+                            }
+                        }
+                    }
                     OutlinedTextField(value = ePrice, onValueChange = { ePrice = it }, label = { Text(if (isPersian) "قیمت (تومان)" else "Price") }, modifier = Modifier.fillMaxWidth())
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         OutlinedTextField(value = eFrame, onValueChange = { eFrame = it }, label = { Text(if (isPersian) "روزهای فریم" else "Frame Days") }, modifier = Modifier.weight(1f))

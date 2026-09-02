@@ -81,6 +81,9 @@ fun AccountScreen(
             userName = acc.name
             userEmail = acc.email
             userPhone = acc.phone
+            // به‌درخواست کاربر: اگر هنوز آواتاری ثبت نشده، اولین‌بار از عکس
+            // گوگل‌اکانت لود، در سرور ذخیره و سینک می‌شود؛ با لمس طولانی قابل جایگزینی است.
+            viewModel.seedAvatarFromGoogleIfEmpty(acc.avatarUrl)
         } catch (e: Exception) {
             // Offline or fallback to clinic info
             userName = settings.doctorName.ifBlank { "کاربر دنتال‌پرو" }

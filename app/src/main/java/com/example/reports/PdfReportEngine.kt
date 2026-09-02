@@ -56,6 +56,15 @@ class PdfReportBuilder(
     private val pageHeight = 842
     private val margin = 36f
 
+    companion object {
+        /**
+         * «گزارش تصویری» — وقتی true باشد، [build] به‌جای PDF خروجی تصویری با
+         * [UnifiedImageGenerator] می‌سازد؛ فراخوان باید بعد از تولید آن را false کند.
+         */
+        @Volatile
+        var renderNextAsImage: Boolean = false
+    }
+
     private var columns: List<ReportColumn>? = null
     private var rows: List<List<String>> = emptyList()
     private val summaryLines = mutableListOf<ReportSummaryLine>()
@@ -89,7 +98,47 @@ class PdfReportBuilder(
 
     private fun clean(context: Context, text: String): String = AppFonts.sanitize(context, text)
 
+    /**
+     * «گزارش تصویری» — همان محتوای PDF با جنریتور اصلی تصویرساز اپ
+     * ([UnifiedImageGenerator])؛ به‌درخواست کاربر کنار خروجی PDF برای
+     * گزارش‌های مالی و اشخاص ارائه می‌شود.
+     */
+    fun buildImage(context: Context, fileNamePrefix: String = "report"): File {
+        val blocks = mutableListOf<UnifiedImageGenerator.DocBlock>()
+        bodyParagraph?.takeIf { it.isNotBlank() }?.let {
+            blocks += UnifiedImageGenerator.DocBlock.Paragraph(it)
+        }
+        columns?.let { cols ->
+            if (rows.isNotEmpty()) {
+                blocks += UnifiedImageGenerator.DocBlock.Table(
+                    cols.map { UnifiedImageGenerator.TableColumn(it.title, it.weight) },
+                    rows
+                )
+            }
+        }
+        if (summaryLines.isNotEmpty()) {
+            blocks += UnifiedImageGenerator.DocBlock.KeyValues(
+                summaryLines.map { UnifiedImageGenerator.KeyRow(it.label, it.value, emphasize = it.emphasize) }
+            )
+        }
+        return UnifiedImageGenerator.generateUnifiedImage(
+            context = context,
+            document = UnifiedImageGenerator.UnifiedDocument(
+                kind = ExportDocKind.VendorLedger,
+                title = reportTitle,
+                fileNamePrefix = fileNamePrefix,
+                subtitle = subtitle,
+                clinicName = clinicName,
+                doctorName = doctorName,
+                blocks = blocks
+            ),
+            theme = themeSpec
+        )
+    }
+
     fun build(context: Context, fileNamePrefix: String = "report"): File {
+        // «گزارش تصویری»: اگر پرچم فعال باشد، همان محتوا با جنریتور اصلی تصویرساز اپ ساخته می‌شود.
+        if (renderNextAsImage) return buildImage(context, fileNamePrefix)
         val document = PdfDocument()
         var pageNumber = 1
         var page = document.startPage(PdfDocument.PageInfo.Builder(pageWidth, pageHeight, pageNumber).create())

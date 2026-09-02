@@ -96,7 +96,9 @@ object Supabase {
         val email: String,
         val name: String,
         val phone: String,
-        val emailVerified: Boolean
+        val emailVerified: Boolean,
+        /** آدرس عکس پروفایل گوگل‌اکانت (user_metadata.avatar_url / picture) — برای لود اولیهٔ آواتار. */
+        val avatarUrl: String = ""
     )
 
     class SupabaseApiException(
@@ -270,15 +272,21 @@ object Supabase {
         return Session(access, refresh, expiresAt, uid, email)
     }
 
-    private fun parseUser(obj: JsonObject): UserInfo = UserInfo(
-        id = obj.get("id")?.takeIf { it.isJsonPrimitive }?.asString ?: "",
-        email = obj.get("email")?.takeIf { it.isJsonPrimitive && !it.isJsonNull }?.asString ?: "",
-        name = obj.get("user_metadata")?.takeIf { it.isJsonObject }?.asJsonObject
-            ?.get("name")?.takeIf { it.isJsonPrimitive && !it.isJsonNull }?.asString ?: "",
-        phone = obj.get("phone")?.takeIf { it.isJsonPrimitive && !it.isJsonNull }?.asString ?: "",
-        emailVerified = obj.has("email_confirmed_at") &&
-            obj.get("email_confirmed_at")?.isJsonNull == false
-    )
+    private fun parseUser(obj: JsonObject): UserInfo {
+        val metadata = obj.get("user_metadata")?.takeIf { it.isJsonObject }?.asJsonObject
+        fun meta(key: String): String =
+            metadata?.get(key)?.takeIf { it.isJsonPrimitive && !it.isJsonNull }?.asString ?: ""
+        return UserInfo(
+            id = obj.get("id")?.takeIf { it.isJsonPrimitive }?.asString ?: "",
+            email = obj.get("email")?.takeIf { it.isJsonPrimitive && !it.isJsonNull }?.asString ?: "",
+            name = meta("name"),
+            phone = obj.get("phone")?.takeIf { it.isJsonPrimitive && !it.isJsonNull }?.asString ?: "",
+            emailVerified = obj.has("email_confirmed_at") &&
+                obj.get("email_confirmed_at")?.isJsonNull == false,
+            // گوگل هر دو کلید avatar_url و picture را در متادیتا می‌گذارد
+            avatarUrl = meta("avatar_url").ifBlank { meta("picture") }
+        )
+    }
 
     private fun errorFrom(response: Response): SupabaseApiException {
         val body = try {

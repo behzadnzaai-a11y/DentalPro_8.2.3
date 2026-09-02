@@ -1619,9 +1619,13 @@ class DentalViewModel(application: Application) : AndroidViewModel(application) 
         // Force update defaults if user is still on old neon theme
         viewModelScope.launch {
             val currentSettings = repository.clinicSettings.firstOrNull()
-            if (currentSettings == null) {
-                repository.insertSettings(com.example.data.ClinicSettings(themeName = "NEON_CARBON", isDarkMode = true))
-            } else if (currentSettings.themeName == "NEON_TEAL" || currentSettings.themeName == "CLINICAL_CLEAN") {
+            // «بدون پیش‌فرض» (درخواست کاربر): اگر هنوز هیچ تنظیماتی ثبت نشده، هیچ
+            // ردیف پیش‌فرضی ساخته نمی‌شود — UI از ClinicSettings() درون‌حافظه استفاده
+            // می‌کند و اولین ذخیرهٔ خودِ کاربر تنها ردیف (id=1) را می‌سازد. درجِ
+            // پیش‌فرض در این نقطه باعث می‌شد با هر لاگین (قبل از رسیدن pull) یک
+            // ردیف تازه در clinic_settings سرور ثبت شود.
+            if (currentSettings != null &&
+                (currentSettings.themeName == "NEON_TEAL" || currentSettings.themeName == "CLINICAL_CLEAN")) {
                 repository.insertSettings(currentSettings.copy(themeName = "NEON_CARBON", isDarkMode = true))
             }
         }
@@ -2826,6 +2830,13 @@ class DentalViewModel(application: Application) : AndroidViewModel(application) 
                     finalDeliveryDays = finalDeliveryDays
                 )
             )
+            // به‌درخواست کاربر: لابراتوارِ تعریف‌شده در تعرفهٔ خدمات، همان طرف‌حسابِ
+            // بخش «هزینه‌ها ← لابراتوار» است (منبع واحد در کل اپ) — اگر نبود ساخته می‌شود.
+            repository.findOrCreateParty(
+                com.example.data.PartySection.LAB,
+                com.example.data.PartySection.LAB.faTitle,
+                labName
+            )
         }
     }
 
@@ -3545,6 +3556,7 @@ class DentalViewModel(application: Application) : AndroidViewModel(application) 
                 com.example.data.PartySection.ENGINEERING -> "ENG"
                 com.example.data.PartySection.STORE -> "STORE"
                 com.example.data.PartySection.RUNNING -> "RUN"
+                com.example.data.PartySection.SALARY -> "SAL"
                 com.example.data.PartySection.OTHER -> "OTHER"
             } + letter
             repository.insertPartyAccount(
@@ -3557,6 +3569,24 @@ class DentalViewModel(application: Application) : AndroidViewModel(application) 
                     notes = notes.trim()
                 )
             )
+        }
+    }
+
+    /**
+     * هماهنگ‌سازی طرف‌حساب‌های «حقوق پرسنل» با لیست پرسنل مطب — منبع واحد:
+     * برای هر پرسنل فعال، اگر طرف‌حساب SALARY نبود ساخته می‌شود؛ پرسنل حذف‌شده
+     * از لیست حقوق نمایش داده نمی‌شود (فیلتر در UI).
+     */
+    fun syncSalaryParties() {
+        viewModelScope.launch {
+            val staff = repository.allStaffMembers.first().filter { !it.isDeleted && it.fullName.isNotBlank() }
+            staff.forEach { s ->
+                repository.findOrCreateParty(
+                    com.example.data.PartySection.SALARY,
+                    com.example.data.PartySection.SALARY.faTitle,
+                    s.fullName
+                )
+            }
         }
     }
 
@@ -5446,17 +5476,9 @@ class DentalViewModel(application: Application) : AndroidViewModel(application) 
             }
         }
 
-        if (repository.clinicSettings.first() == null) {
-            repository.insertSettings(
-                ClinicSettings(
-                    id = 1,
-                    clinicName = "مطب دندانپزشکی",
-                    doctorName = " ",
-                    childrenNames = "",
-                    staffNames = "منشی مطب"
-                )
-            )
-        }
+        // «بدون پیش‌فرض» (درخواست کاربر): ردیف پیش‌فرض clinic_settings دیگر اینجا ساخته
+        // نمی‌شود؛ با هر لاگینِ تازه (وقتی دیتابیس محلی هنوز خالی بود) یک ردیف پیش‌فرض
+        // با syncId جدید به سرور می‌رفت و جدول clinic_settings پر از ردیف تکراری می‌شد.
     }
 
     /**
@@ -5861,6 +5883,41 @@ class DentalViewModel(application: Application) : AndroidViewModel(application) 
         if (!authorizeDomain("settings", "UPDATE_CLINIC_SETTINGS", doctorOnly = true)) return
         viewModelScope.launch(Dispatchers.IO) {
             repository.insertSettings(settings.value.copy(settingsExpandedCards = csv))
+        }
+    }
+
+    /**
+     * لود اولیهٔ آواتار از گوگل‌اکانت — به‌درخواست کاربر:
+     * اگر هنوز آواتاری ذخیره نشده باشد، عکس پروفایل گوگل دانلود، از مسیر
+     * استاندارد [updateClinicAvatar] در سرور ذخیره و سینک می‌شود؛ بعداً با
+     * لمس طولانی قابل جایگزینی است (و جایگزینِ کاربر هرگز بازنویسی نمی‌شود).
+     */
+    fun seedAvatarFromGoogleIfEmpty(avatarUrl: String) {
+        if (avatarUrl.isBlank()) return
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                // فقط وقتی هیچ آواتاری ثبت نشده — از دیتابیس تازه می‌خوانیم نه StateFlow
+                val current = repository.getSettingsOnce()
+                if (!current?.avatarFileId.isNullOrBlank()) return@launch
+                val conn = java.net.URL(avatarUrl).openConnection() as java.net.HttpURLConnection
+                conn.connectTimeout = 15000
+                conn.readTimeout = 15000
+                conn.instanceFollowRedirects = true
+                val bytes = conn.inputStream.use { it.readBytes() }
+                conn.disconnect()
+                if (bytes.isEmpty()) return@launch
+                val file = java.io.File(appContext.cacheDir, "google_avatar_${System.currentTimeMillis()}.jpg")
+                file.writeBytes(bytes)
+                // دوباره‌چک (شرایط رقابتی: شاید همین لحظه کاربر آواتار گذاشته باشد)
+                val fresh = repository.getSettingsOnce()
+                if (!fresh?.avatarFileId.isNullOrBlank()) {
+                    file.delete()
+                    return@launch
+                }
+                updateClinicAvatar(file.absolutePath)
+            } catch (e: Exception) {
+                // آفلاین یا خطای شبکه — دفعهٔ بعدِ باز شدن صفحهٔ حساب دوباره تلاش می‌شود
+            }
         }
     }
 

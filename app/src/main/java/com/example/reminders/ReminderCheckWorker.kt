@@ -60,6 +60,37 @@ class ReminderCheckWorker(context: Context, params: WorkerParameters) : Coroutin
                 }
 
             val tomorrowJalali = com.example.util.PersianCalendarHelper.timestampToJalali(in24h)
+
+            // ——— یادآوری یک روز قبل از موعد: حقوق پرسنل، اجاره مطب و شارژ ساختمان ———
+            // فیش حقوقی (expenseGroup == SALARY) با «تاریخ فاکتور = تاریخ واریز حقوق» ثبت می‌شود؛
+            // فاکتورهای اجاره/شارژ هم با تاریخ سررسیدشان. فاکتورِ هنوز پرداخت‌نشده که موعدش
+            // در ۲۴ ساعت آینده است، اعلان می‌گیرد.
+            run {
+                val expenses = repository.allExpenses.first().filter { !it.isDeleted }
+                val expensePayments = repository.allExpensePayments.first().filter { !it.isDeleted }
+                val paidByExpense = expensePayments.groupBy { it.clinicExpenseId }
+                    .mapValues { entry -> entry.value.sumOf { it.amount } }
+                fun isUnpaid(e: com.example.data.ClinicExpense): Boolean =
+                    (paidByExpense[e.id] ?: 0L) < e.amount
+
+                val dueSoon = expenses.filter { e ->
+                    e.date in now..in24h && isUnpaid(e) && (
+                        e.expenseGroup.trim() == "SALARY" ||
+                            (e.expenseGroup.trim() == "RUNNING" &&
+                                (e.subAccountName.contains("اجاره") || e.subAccountName.contains("شارژ ساختمان")))
+                        )
+                }
+                dueSoon.forEach { e ->
+                    val isSalary = e.expenseGroup.trim() == "SALARY"
+                    showPaymentDueReminder(
+                        applicationContext,
+                        notificationId = "expense_due_${e.id}".hashCode(),
+                        title = if (isSalary) "فردا موعد واریز حقوق: ${e.subAccountName}" else "فردا موعد پرداخت: ${e.subAccountName}",
+                        body = "مبلغ ${e.amount} — ${if (isSalary) "فیش حقوقی" else "سررسید"} ثبت‌شده در هزینه‌های مطب"
+                    )
+                }
+            }
+
             val events = repository.allCalendarEvents.first()
             events.filter { event ->
                 val isPersonal = event.category == "شخصی" || event.personalType.isNotEmpty()
