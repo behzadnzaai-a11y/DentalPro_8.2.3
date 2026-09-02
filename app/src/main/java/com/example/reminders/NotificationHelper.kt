@@ -93,6 +93,23 @@ fun showChequeDueReminder(context: Context, notificationId: Int, patientName: St
     NotificationManagerCompat.from(context).notify(notificationId, notification)
 }
 
+/**
+ * یادآوری موعد پرداخت‌های مطب — حقوق پرسنل، اجاره و شارژ ساختمان (یک روز قبل از موعد).
+ */
+fun showPaymentDueReminder(context: Context, notificationId: Int, title: String, body: String) {
+    if (!canPostNotifications(context)) return
+    ensureNotificationChannels(context)
+    val notification = NotificationCompat.Builder(context, CHANNEL_CHEQUES)
+        .setSmallIcon(R.mipmap.ic_launcher)
+        .setContentTitle(title)
+        .setContentText(body)
+        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+        .setAutoCancel(true)
+        .setContentIntent(openAppPendingIntent(context, notificationId))
+        .build()
+    NotificationManagerCompat.from(context).notify(notificationId, notification)
+}
+
 fun showOccasionReminder(context: Context, notificationId: Int, title: String, typeName: String) {
     if (!canPostNotifications(context)) return
     ensureNotificationChannels(context)

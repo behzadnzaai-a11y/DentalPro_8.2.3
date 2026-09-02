@@ -10,6 +10,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.material.icons.Icons
@@ -163,6 +165,7 @@ private fun PartySectionCard(
         PartySection.ENGINEERING -> Icons.Default.Handyman
         PartySection.STORE -> Icons.Default.MedicalServices
         PartySection.RUNNING -> Icons.Default.Receipt
+        PartySection.SALARY -> Icons.Default.Groups
         PartySection.OTHER -> Icons.Default.MoreHoriz
     }
     Card(
@@ -221,7 +224,18 @@ private fun PartySectionDetailScreen(
     val currency = viewModel.label("currency")
     fun t(fa: String, en: String) = if (isPersian) fa else en
 
-    val sectionParties = parties.filter { it.section.trim() == section.key }.sortedBy { it.name }
+    val sectionPartiesRaw = parties.filter { it.section.trim() == section.key }
+    // «حقوق پرسنل»: منبع واحد = لیست پرسنل مطب؛ عکس‌ها و افزودن/حذف از همان‌جا هماهنگ می‌شود.
+    val staffMembers by viewModel.allStaffMembers.collectAsStateWithLifecycle()
+    LaunchedEffect(section, staffMembers) {
+        if (section == PartySection.SALARY) viewModel.syncSalaryParties()
+    }
+    val sectionParties = (
+        if (section == PartySection.SALARY) {
+            val staffNames = staffMembers.filter { !it.isDeleted }.map { it.fullName.trim().lowercase() }.toSet()
+            sectionPartiesRaw.filter { it.name.trim().lowercase() in staffNames }
+        } else sectionPartiesRaw
+    ).sortedBy { it.name }
 
     var showAddParty by remember { mutableStateOf(false) }
     var selectedParty by remember { mutableStateOf<PartyAccount?>(null) }
@@ -251,23 +265,47 @@ private fun PartySectionDetailScreen(
                     overflow = TextOverflow.Ellipsis
                 )
             }
-            Button(
-                onClick = { showAddParty = true },
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
-            ) {
-                Icon(
-                    if (section == PartySection.RUNNING) Icons.Default.Add else Icons.Default.PersonAdd,
-                    contentDescription = null, modifier = Modifier.size(16.dp)
-                )
-                Spacer(Modifier.width(4.dp))
-                // به‌درخواست کاربر: در بخشِ «هزینه‌های جاری مطب» دکمه «افزودن طرف حساب» به
-                // «افزودن هزینه» تغییر نام یافت؛ بقیهٔ بخش‌ها «افزودن طرف حساب»اند.
-                Text(
-                    if (section == PartySection.RUNNING) t("افزودن هزینه", "Add expense")
-                    else t("افزودن طرف حساب", "Add party account"),
-                    fontWeight = FontWeight.Bold, fontSize = 11.sp
-                )
+            // به‌درخواست کاربر: در بخش‌های «لابراتوار» و «فنی مهندسی و تعمیرات» دکمهٔ
+            // «افزودن طرف حساب» حذف شد — طرف‌حساب‌ها از بخش‌های اصلی خودشان (لابراتوار/تعمیرات)
+            // ساخته می‌شوند تا منبع داده در کل اپ یکی باشد. «حقوق پرسنل» هم با لیست پرسنل مطب همگام است.
+            if (section != PartySection.LAB && section != PartySection.ENGINEERING && section != PartySection.SALARY) {
+                Button(
+                    onClick = { showAddParty = true },
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                ) {
+                    Icon(
+                        if (section == PartySection.RUNNING) Icons.Default.Add else Icons.Default.PersonAdd,
+                        contentDescription = null, modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    Text(
+                        if (section == PartySection.RUNNING) t("افزودن هزینه", "Add expense")
+                        else t("افزودن طرف حساب", "Add party account"),
+                        fontWeight = FontWeight.Bold, fontSize = 11.sp
+                    )
+                }
             }
+        }
+
+        if (section == PartySection.LAB || section == PartySection.ENGINEERING || section == PartySection.SALARY) {
+            Text(
+                text = when (section) {
+                    PartySection.LAB -> t(
+                        "لابراتوارها از بخش «لابراتوار» اپ (دکمهٔ لابراتوار جدید) ساخته می‌شوند و این‌جا فقط صورتحساب آن‌ها نمایش داده می‌شود.",
+                        "Labs are created in the app's Lab section; only their statements are shown here."
+                    )
+                    PartySection.ENGINEERING -> t(
+                        "تکنسین‌ها/تعمیرکاران از بخش «تعمیرات و نگهداری» اپ ساخته می‌شوند و این‌جا فقط صورتحساب آن‌ها نمایش داده می‌شود.",
+                        "Technicians are created in the Maintenance section; only their statements are shown here."
+                    )
+                    else -> t(
+                        "پرسنل و عکس‌ها خودکار با «لیست پرسنل مطب» هماهنگ‌اند (افزودن/حذف از همان‌جا). برای هر نفر فیش حقوقی و پرداخت (کارت به کارت، نقدی، انتقال چک) ثبت می‌شود.",
+                        "Personnel & photos sync automatically with the clinic staff list. Each person gets payslips and payments (card, cash, cheque)."
+                    )
+                },
+                fontSize = 10.sp,
+                color = MaterialTheme.colorScheme.primary
+            )
         }
 
         Text(
@@ -281,10 +319,24 @@ private fun PartySectionDetailScreen(
 
         if (sectionParties.isEmpty()) {
             Text(
-                text = t(
-                    "هنوز طرف‌حسابی در این بخش ثبت نشده است. با دکمهٔ «افزودن طرف‌حساب» اولین طرف‌حساب را بسازید (مثلاً «لابراتوار آ»).",
-                    "No party accounts yet. Use \"Add account\" to create the first one (e.g. Lab A)."
-                ),
+                text = when (section) {
+                    PartySection.LAB -> t(
+                        "هنوز لابراتواری ثبت نشده است. لابراتوارها از بخش «لابراتوار» اپ ساخته می‌شوند.",
+                        "No labs yet. Labs are created in the app's Lab section."
+                    )
+                    PartySection.ENGINEERING -> t(
+                        "هنوز تکنسین/تعمیرکاری ثبت نشده است. تکنسین‌ها از بخش «تعمیرات و نگهداری» اپ ساخته می‌شوند.",
+                        "No technicians yet. Technicians are created in the Maintenance section."
+                    )
+                    PartySection.SALARY -> t(
+                        "هنوز پرسنلی ثبت نشده است. پرسنل از «لیست پرسنل مطب» (بخش پرسنل) اضافه می‌شوند و خودکار این‌جا می‌آیند.",
+                        "No personnel yet. Add staff in the clinic staff list; they appear here automatically."
+                    )
+                    else -> t(
+                        "هنوز طرف‌حسابی در این بخش ثبت نشده است. با دکمهٔ «افزودن» اولین مورد را بسازید.",
+                        "No party accounts yet. Use \"Add\" to create the first one."
+                    )
+                },
                 fontSize = 11.sp,
                 color = Color.Gray,
                 modifier = Modifier.padding(vertical = 8.dp)
@@ -314,6 +366,34 @@ private fun PartySectionDetailScreen(
                             horizontalArrangement = Arrangement.spacedBy(6.dp),
                             modifier = Modifier.weight(1f)
                         ) {
+                            if (section == PartySection.SALARY) {
+                                // عکس پرسنل — هماهنگ با لیست پرسنل مطب
+                                val staff = staffMembers.firstOrNull {
+                                    !it.isDeleted && it.fullName.trim().equals(party.name.trim(), ignoreCase = true)
+                                }
+                                Box(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(CircleShape)
+                                        .background(MaterialTheme.colorScheme.primaryContainer),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    if (!staff?.photoFileId.isNullOrBlank()) {
+                                        SmartImage(
+                                            fileId = staff?.photoFileId,
+                                            modifier = Modifier.fillMaxSize(),
+                                            contentScale = ContentScale.Crop
+                                        )
+                                    } else {
+                                        Icon(
+                                            Icons.Default.Person,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                }
+                            }
                             if (isUtilityParty(party)) {
                                 Icon(
                                     utilityIconOf(party.name),
@@ -324,11 +404,14 @@ private fun PartySectionDetailScreen(
                             }
                             Column {
                                 Text(party.displayLabel, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                                Text(
-                                    text = listOfNotNull(party.code.takeIf { it.isNotBlank() }, party.phone.takeIf { it.isNotBlank() }).joinToString(" — "),
-                                    fontSize = 9.5.sp,
-                                    color = Color.Gray
-                                )
+                                // به‌درخواست کاربر: کدهای خودکار (LABA، ENGB و…) نمایش داده نمی‌شوند.
+                                if (party.phone.isNotBlank()) {
+                                    Text(
+                                        text = party.phone,
+                                        fontSize = 9.5.sp,
+                                        color = Color.Gray
+                                    )
+                                }
                             }
                         }
                         Column(horizontalAlignment = Alignment.End) {
@@ -352,6 +435,17 @@ private fun PartySectionDetailScreen(
                         color = Color.Gray
                     )
                 }
+            }
+        }
+        // به‌درخواست کاربر: در «هزینه‌های جاری مطب» قابلیت افزودن در انتهای لیست هم باشد.
+        if (section == PartySection.RUNNING) {
+            OutlinedButton(
+                onClick = { showAddParty = true },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                Spacer(Modifier.width(4.dp))
+                Text(t("افزودن هزینهٔ جدید", "Add new expense"), fontWeight = FontWeight.Bold, fontSize = 11.sp)
             }
         }
         Spacer(Modifier.height(8.dp))
@@ -609,6 +703,7 @@ private fun PartyLedgerDialog(
     val ledger = PartyLedger(partyInvoices.sumOf { it.amount }, partyPayments.sumOf { it.amount })
 
     var showInvoiceForm by remember { mutableStateOf(false) }
+    var showPayslipForm by remember { mutableStateOf(false) }
     var showPayForm by remember { mutableStateOf(false) }
     var showChequePicker by remember { mutableStateOf(false) }
 
@@ -623,6 +718,7 @@ private fun PartyLedgerDialog(
                 "CASH" -> t("نقدی", "Cash")
                 "POS" -> t("کارتخوان", "POS")
                 "CHEQUE" -> t("چک", "Cheque")
+                "INTERNET" -> t("پرداخت اینترنتی", "Online")
                 else -> t("کارت به کارت", "Card")
             }
             list.add(PartyLedgerRowUi(pay.date, "${t("پرداخت", "Payment")} ($methodLabel) — ${pay.note.ifBlank { "—" }}", -pay.amount))
@@ -634,7 +730,8 @@ private fun PartyLedgerDialog(
         onDismissRequest = onDismiss,
         title = {
             Column {
-                Text("${party.displayLabel} (${party.code})", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                // به‌درخواست کاربر: بدون پرانتز و بدون کد خودکار — «صورتحساب: لابراتوار ایکس»
+                Text(t("صورتحساب: ${party.displayLabel}", "Statement: ${party.displayLabel}"), fontWeight = FontWeight.Bold, fontSize = 14.sp)
                 Text(
                     text = t("دفتر طرف‌حساب — فاکتورها و پرداختی‌ها به‌ترتیب تاریخ", "Party ledger — invoices & payments by date"),
                     fontSize = 10.sp,
@@ -691,9 +788,23 @@ private fun PartyLedgerDialog(
                     modifier = Modifier.fillMaxWidth().horizontalScrollCompat(),
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    FilterChip(selected = false, onClick = { showInvoiceForm = true }, label = { Text(t("صدور فاکتور", "Invoice"), fontSize = 9.5.sp) })
+                    // به‌درخواست کاربر:
+                    // • لابراتوار/فنی‌مهندسی: «صدور فاکتور» حذف — فاکتورها از بخش اصلی خودشان صادر می‌شوند.
+                    // • قبوض/اجاره/شارژ: «صدور فاکتور» و «انتقال چک» حذف — فقط صفحهٔ پرداخت اختصاصی قبض.
+                    val isLabOrEng = party.section.trim() == PartySection.LAB.key ||
+                        party.section.trim() == PartySection.ENGINEERING.key
+                    val isUtility = isUtilityParty(party)
+                    val isSalary = party.section.trim() == PartySection.SALARY.key
+                    if (isSalary) {
+                        FilterChip(selected = false, onClick = { showPayslipForm = true }, label = { Text(t("فیش حقوقی", "Payslip"), fontSize = 9.5.sp) })
+                    }
+                    if (!isLabOrEng && !isUtility && !isSalary) {
+                        FilterChip(selected = false, onClick = { showInvoiceForm = true }, label = { Text(t("صدور فاکتور", "Invoice"), fontSize = 9.5.sp) })
+                    }
                     FilterChip(selected = false, onClick = { showPayForm = true }, label = { Text(t("ثبت پرداخت", "Pay"), fontSize = 9.5.sp) })
-                    FilterChip(selected = false, onClick = { showChequePicker = true }, label = { Text(t("انتقال چک", "Cheque"), fontSize = 9.5.sp) })
+                    if (!isUtility) {
+                        FilterChip(selected = false, onClick = { showChequePicker = true }, label = { Text(t("انتقال چک", "Cheque"), fontSize = 9.5.sp) })
+                    }
                 }
 
                 Text(
@@ -774,16 +885,37 @@ private fun PartyLedgerDialog(
             onDismiss = { showInvoiceForm = false }
         )
     }
-    if (showPayForm) {
-        PayPartyDialog(
+    if (showPayslipForm) {
+        PayslipDialog(
             viewModel = viewModel,
             party = party,
-            invoices = partyInvoices,
-            bankAccounts = bankAccounts.filter { !it.isDeleted },
             isPersian = isPersian,
             currency = currency,
-            onDismiss = { showPayForm = false }
+            onDismiss = { showPayslipForm = false }
         )
+    }
+    if (showPayForm) {
+        if (isUtilityParty(party)) {
+            // صفحهٔ پرداخت اختصاصی قبض — با مشخصات قبض و فقط دو روش پرداخت
+            PayUtilityBillDialog(
+                viewModel = viewModel,
+                party = party,
+                bankAccounts = bankAccounts.filter { !it.isDeleted },
+                isPersian = isPersian,
+                currency = currency,
+                onDismiss = { showPayForm = false }
+            )
+        } else {
+            PayPartyDialog(
+                viewModel = viewModel,
+                party = party,
+                invoices = partyInvoices,
+                bankAccounts = bankAccounts.filter { !it.isDeleted },
+                isPersian = isPersian,
+                currency = currency,
+                onDismiss = { showPayForm = false }
+            )
+        }
     }
     if (showChequePicker) {
         PickChequeForPartyDialog(
@@ -795,6 +927,249 @@ private fun PartyLedgerDialog(
             onDismiss = { showChequePicker = false }
         )
     }
+}
+
+/**
+ * صفحهٔ پرداخت اختصاصی قبوض (برق، گاز، آب، تلفن، موبایل، اینترنت، اجاره، شارژ) —
+ * به‌درخواست کاربر: فقط دو روش «کارت به کارت» و «پرداخت اینترنتی»؛ مشخصات قبض
+ * (شناسه قبض، شناسه پرداخت، مبلغ قبض، تاریخ قبض) هنگام پرداخت وارد می‌شود.
+ */
+@Composable
+private fun PayUtilityBillDialog(
+    viewModel: DentalViewModel,
+    party: PartyAccount,
+    bankAccounts: List<BankAccount>,
+    isPersian: Boolean,
+    currency: String,
+    onDismiss: () -> Unit
+) {
+    fun t(fa: String, en: String) = if (isPersian) fa else en
+    var billId by remember { mutableStateOf("") }
+    var payId by remember { mutableStateOf("") }
+    var amountStr by remember { mutableStateOf("") }
+    var billDate by remember { mutableStateOf(System.currentTimeMillis()) }
+    var method by remember { mutableStateOf("CARD_TRANSFER") }
+    var selectedAccountId by remember { mutableStateOf<Long?>(null) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Icon(utilityIconOf(party.name), contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                Text(t("پرداخت قبض — ${party.displayLabel}", "Pay bill — ${party.displayLabel}"), fontWeight = FontWeight.Bold, fontSize = 13.sp)
+            }
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 460.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(9.dp)
+            ) {
+                OutlinedTextField(
+                    value = billId, onValueChange = { billId = it },
+                    label = { Text(t("شناسه قبض", "Bill ID")) },
+                    modifier = Modifier.fillMaxWidth(), singleLine = true
+                )
+                OutlinedTextField(
+                    value = payId, onValueChange = { payId = it },
+                    label = { Text(t("شناسه پرداخت", "Payment ID")) },
+                    modifier = Modifier.fillMaxWidth(), singleLine = true
+                )
+                com.example.ui.components.AmountInputField(
+                    value = amountStr,
+                    onValueChange = { amountStr = it },
+                    label = "${t("مبلغ قبض", "Bill amount")} ($currency)",
+                    currency = currency,
+                    isPersian = isPersian
+                )
+                com.example.ui.components.JalaliDateField(
+                    timestamp = billDate,
+                    onDateSelected = { billDate = it },
+                    isPersian = isPersian,
+                    label = t("تاریخ قبض", "Bill date"),
+                    formatDate = { viewModel.formatDate(it) }
+                )
+
+                Text(t("روش پرداخت:", "Payment method:"), fontSize = 10.5.sp, color = Color.Gray)
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    listOf(
+                        "CARD_TRANSFER" to t("کارت به کارت", "Card transfer"),
+                        "INTERNET" to t("پرداخت اینترنتی", "Online payment")
+                    ).forEach { (key, labelTxt) ->
+                        FilterChip(
+                            selected = method == key,
+                            onClick = { method = key },
+                            label = { Text(labelTxt, fontSize = 10.sp) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+
+                if (bankAccounts.isNotEmpty()) {
+                    Text(t("حساب بانکی کسر شونده:", "Debit bank account:"), fontSize = 10.sp, color = Color.Gray)
+                    bankAccounts.forEach { acc ->
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(8.dp),
+                            color = if (selectedAccountId == acc.id) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                            border = BorderStroke(1.dp, if (selectedAccountId == acc.id) MaterialTheme.colorScheme.primary else Color.Transparent),
+                            onClick = { selectedAccountId = if (selectedAccountId == acc.id) null else acc.id }
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(8.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(acc.bankName, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                Text("${formatAmount(acc.balance)} $currency", fontSize = 10.sp, color = Color.Gray)
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    val amount = com.example.ui.components.parseGroupedAmount(amountStr)
+                    if (amount > 0L) {
+                        val note = listOf(
+                            billId.takeIf { it.isNotBlank() }?.let { "${t("شناسه قبض", "Bill ID")}: $it" },
+                            payId.takeIf { it.isNotBlank() }?.let { "${t("شناسه پرداخت", "Payment ID")}: $it" },
+                            "${t("تاریخ قبض", "Bill date")}: ${viewModel.formatDate(billDate)}"
+                        ).filterNotNull().joinToString(" | ")
+                        viewModel.addPartyPayment(party, amount, method, selectedAccountId, date = billDate, note = note)
+                        onDismiss()
+                    }
+                },
+                enabled = com.example.ui.components.parseGroupedAmount(amountStr) > 0L
+            ) { Text(t("ثبت پرداخت قبض", "Pay bill"), fontWeight = FontWeight.Bold) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(t("انصراف", "Cancel")) }
+        }
+    )
+}
+
+/**
+ * فیش حقوقی «حقوق پرسنل» — استاندارد ولی ساده (به‌درخواست کاربر):
+ * حقوق پایه + مزایا + اضافه‌کار − بیمه/کسورات = خالص پرداختی.
+ * تاریخ واریز حقوق ثبت می‌شود و یادآوری یک روز قبل ارسال می‌شود.
+ */
+@Composable
+private fun PayslipDialog(
+    viewModel: DentalViewModel,
+    party: PartyAccount,
+    isPersian: Boolean,
+    currency: String,
+    onDismiss: () -> Unit
+) {
+    fun t(fa: String, en: String) = if (isPersian) fa else en
+    var baseStr by remember { mutableStateOf("") }
+    var benefitsStr by remember { mutableStateOf("") }
+    var overtimeStr by remember { mutableStateOf("") }
+    var deductionsStr by remember { mutableStateOf("") }
+    var period by remember { mutableStateOf("") }
+    var depositDate by remember { mutableStateOf(System.currentTimeMillis()) }
+
+    val base = com.example.ui.components.parseGroupedAmount(baseStr)
+    val benefits = com.example.ui.components.parseGroupedAmount(benefitsStr)
+    val overtime = com.example.ui.components.parseGroupedAmount(overtimeStr)
+    val deductions = com.example.ui.components.parseGroupedAmount(deductionsStr)
+    val net = (base + benefits + overtime - deductions).coerceAtLeast(0L)
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Icon(Icons.Default.ReceiptLong, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                Text(t("فیش حقوقی — ${party.name}", "Payslip — ${party.name}"), fontWeight = FontWeight.Bold, fontSize = 13.sp)
+            }
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 460.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedTextField(
+                    value = period, onValueChange = { period = it },
+                    label = { Text(t("دورهٔ حقوق (مثلاً ۱۴۰۵/۰۶)", "Pay period (e.g. 1405/06)")) },
+                    modifier = Modifier.fillMaxWidth(), singleLine = true
+                )
+                com.example.ui.components.AmountInputField(
+                    value = baseStr, onValueChange = { baseStr = it },
+                    label = t("حقوق پایه", "Base salary"), currency = currency, isPersian = isPersian
+                )
+                com.example.ui.components.AmountInputField(
+                    value = benefitsStr, onValueChange = { benefitsStr = it },
+                    label = t("مزایا (بن، پاداش…)", "Benefits"), currency = currency, isPersian = isPersian
+                )
+                com.example.ui.components.AmountInputField(
+                    value = overtimeStr, onValueChange = { overtimeStr = it },
+                    label = t("اضافه‌کار", "Overtime"), currency = currency, isPersian = isPersian
+                )
+                com.example.ui.components.AmountInputField(
+                    value = deductionsStr, onValueChange = { deductionsStr = it },
+                    label = t("بیمه / کسورات", "Insurance / deductions"), currency = currency, isPersian = isPersian
+                )
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp),
+                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
+                ) {
+                    Text(
+                        "${t("خالص پرداختی:", "Net pay:")} ${formatAmount(net)} $currency",
+                        fontSize = 12.5.sp, fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(10.dp)
+                    )
+                }
+                com.example.ui.components.JalaliDateField(
+                    timestamp = depositDate,
+                    onDateSelected = { depositDate = it },
+                    isPersian = isPersian,
+                    label = t("تاریخ واریز حقوق", "Salary deposit date"),
+                    formatDate = { viewModel.formatDate(it) }
+                )
+                Text(
+                    t("یک روز قبل از تاریخ واریز، اعلان یادآوری دریافت می‌کنید. پرداخت از «ثبت پرداخت» (کارت به کارت، نقدی) یا «انتقال چک» انجام می‌شود.",
+                        "You'll get a reminder one day before the deposit date. Pay via \"Pay\" (card, cash) or cheque transfer."),
+                    fontSize = 9.5.sp, color = Color.Gray
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    val details = listOfNotNull(
+                        period.trim().takeIf { it.isNotBlank() }?.let { "${t("دوره", "Period")}: $it" },
+                        base.takeIf { it > 0 }?.let { "${t("حقوق پایه", "Base")}: ${formatAmount(it)}" },
+                        benefits.takeIf { it > 0 }?.let { "${t("مزایا", "Benefits")}: ${formatAmount(it)}" },
+                        overtime.takeIf { it > 0 }?.let { "${t("اضافه‌کار", "Overtime")}: ${formatAmount(it)}" },
+                        deductions.takeIf { it > 0 }?.let { "${t("بیمه/کسورات", "Deductions")}: ${formatAmount(it)}" },
+                        "${t("خالص", "Net")}: ${formatAmount(net)}"
+                    ).joinToString(" | ")
+                    viewModel.addPartyInvoice(
+                        party,
+                        net,
+                        description = t("فیش حقوقی", "Payslip"),
+                        date = depositDate,
+                        invoiceDetails = details
+                    )
+                    onDismiss()
+                },
+                enabled = net > 0L
+            ) { Text(t("ثبت فیش حقوقی", "Save payslip"), fontWeight = FontWeight.Bold) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(t("انصراف", "Cancel")) }
+        }
+    )
 }
 
 /** صدور فاکتور برای طرف‌حساب — بدون پرداختِ هم‌زمان (خواستهٔ کاربر). */
@@ -977,11 +1352,18 @@ private fun PayPartyDialog(
                 )
 
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    listOf(
+                    // «حقوق پرسنل»: فقط کارت به کارت و نقدی (چک از «انتقال چک») — به‌درخواست کاربر.
+                    val methodOptions = if (party.section.trim() == PartySection.SALARY.key)
+                        listOf(
+                            "CARD_TRANSFER" to t("کارت به کارت", "Card"),
+                            "CASH" to t("نقدی", "Cash")
+                        )
+                    else listOf(
                         "CASH" to t("نقدی (صندوق)", "Cash (fund)"),
                         "CARD_TRANSFER" to t("کارت به کارت", "Card"),
                         "POS" to t("کارتخوان", "POS")
-                    ).forEach { (key, labelTxt) ->
+                    )
+                    methodOptions.forEach { (key, labelTxt) ->
                         FilterChip(
                             selected = method == key,
                             onClick = { method = key },
@@ -1916,9 +2298,28 @@ fun MaintenanceScreen(viewModel: DentalViewModel) {
     fun t(fa: String, en: String) = if (isPersian) fa else en
 
     var showForm by remember { mutableStateOf(false) }
+    var showTechForm by remember { mutableStateOf(false) }
+    // فاکتور کامل تعمیرات — به‌درخواست کاربر با فیلدهای اختصاصی
     var equipment by remember { mutableStateOf("") }
-    var desc by remember { mutableStateOf("") }
-    var costStr by remember { mutableStateOf("") }
+    var issue by remember { mutableStateOf("") }
+    var workDone by remember { mutableStateOf("") }
+    var partsDesc by remember { mutableStateOf("") }
+    var partsCostStr by remember { mutableStateOf("") }
+    var laborCostStr by remember { mutableStateOf("") }
+    var warranty by remember { mutableStateOf("") }
+    var techName by remember { mutableStateOf("") }
+    var serviceDate by remember { mutableStateOf(System.currentTimeMillis()) }
+    var hasNextService by remember { mutableStateOf(false) }
+    var nextServiceDate by remember { mutableStateOf(System.currentTimeMillis() + 90L * 24 * 60 * 60 * 1000) }
+
+    // تکنسین‌ها = طرف‌حساب‌های بخش «فنی مهندسی و تعمیرات» (منبع واحد در کل اپ)
+    val parties by viewModel.partyAccounts.collectAsStateWithLifecycle()
+    val technicians = parties
+        .filter { it.section.trim() == PartySection.ENGINEERING.key }
+        .map { it.name.trim() }
+        .filter { it.isNotBlank() }
+        .distinct()
+        .sorted()
 
     val active = maintenanceList.filter { !it.isDeleted }.sortedByDescending { it.date }
 
@@ -1932,10 +2333,23 @@ fun MaintenanceScreen(viewModel: DentalViewModel) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(t("تعمیر و نگهداری", "Maintenance"), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-            Button(onClick = { showForm = !showForm }) {
-                Icon(if (showForm) Icons.Default.Close else Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
-                Spacer(Modifier.width(4.dp))
-                Text(if (showForm) t("بستن", "Close") else t("ثبت سرویس جدید", "New Service"), fontWeight = FontWeight.Bold)
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                OutlinedButton(
+                    onClick = { showTechForm = true },
+                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 5.dp)
+                ) {
+                    Icon(Icons.Default.PersonAdd, contentDescription = null, modifier = Modifier.size(15.dp))
+                    Spacer(Modifier.width(3.dp))
+                    Text(t("تکنسین جدید", "New technician"), fontWeight = FontWeight.Bold, fontSize = 10.5.sp)
+                }
+                Button(
+                    onClick = { showForm = !showForm },
+                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 5.dp)
+                ) {
+                    Icon(if (showForm) Icons.Default.Close else Icons.Default.Add, contentDescription = null, modifier = Modifier.size(15.dp))
+                    Spacer(Modifier.width(3.dp))
+                    Text(if (showForm) t("بستن", "Close") else t("فاکتور تعمیرات", "New invoice"), fontWeight = FontWeight.Bold, fontSize = 10.5.sp)
+                }
             }
         }
 
@@ -1946,42 +2360,140 @@ fun MaintenanceScreen(viewModel: DentalViewModel) {
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f))
             ) {
                 Column(
-                    modifier = Modifier.padding(12.dp),
+                    modifier = Modifier
+                        .padding(12.dp)
+                        .heightIn(max = 480.dp)
+                        .verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
+                    Text(
+                        t("فاکتور تعمیرات / سرویس تجهیزات", "Maintenance / repair invoice"),
+                        fontWeight = FontWeight.Bold, fontSize = 12.5.sp, color = MaterialTheme.colorScheme.primary
+                    )
+                    // تکنسین — انتخاب از تکنسین‌های ثبت‌شده (طرف‌حساب فنی‌مهندسی)
+                    var techExpanded by remember { mutableStateOf(false) }
+                    ExposedDropdownMenuBox(expanded = techExpanded, onExpandedChange = { techExpanded = it }) {
+                        OutlinedTextField(
+                            value = techName,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text(t("تکنسین / شرکت تعمیراتی", "Technician / repair company")) },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = techExpanded) },
+                            modifier = Modifier.menuAnchor().fillMaxWidth(), singleLine = true
+                        )
+                        ExposedDropdownMenu(expanded = techExpanded, onDismissRequest = { techExpanded = false }) {
+                            if (technicians.isEmpty()) {
+                                DropdownMenuItem(
+                                    text = { Text(t("تکنسینی ثبت نشده — از دکمهٔ «تکنسین جدید» اضافه کنید", "No technicians — use \"New technician\"")) },
+                                    onClick = { techExpanded = false; showTechForm = true }
+                                )
+                            }
+                            technicians.forEach { name ->
+                                DropdownMenuItem(text = { Text(name) }, onClick = { techName = name; techExpanded = false })
+                            }
+                        }
+                    }
                     OutlinedTextField(
                         value = equipment, onValueChange = { equipment = it },
-                        label = { Text(t("نام تجهیزات (مثلاً یونیت ۱، اتوکلاو)", "Equipment (e.g. Unit 1, Autoclave)")) },
+                        label = { Text(t("دستگاه / تجهیز (مثلاً یونیت ۱، اتوکلاو)", "Equipment (e.g. Unit 1, Autoclave)")) },
                         modifier = Modifier.fillMaxWidth(), singleLine = true
                     )
                     OutlinedTextField(
-                        value = desc, onValueChange = { desc = it },
-                        label = { Text(t("شرح سرویس/تعمیر", "Service description")) },
+                        value = issue, onValueChange = { issue = it },
+                        label = { Text(t("شرح ایراد / مشکل", "Issue description")) },
                         modifier = Modifier.fillMaxWidth(), singleLine = true
                     )
                     OutlinedTextField(
-                        value = costStr, onValueChange = { costStr = it.filter(Char::isDigit) },
-                        label = { Text("${t("هزینه", "Cost")} ($currency)") },
+                        value = workDone, onValueChange = { workDone = it },
+                        label = { Text(t("کار انجام‌شده", "Work done")) },
                         modifier = Modifier.fillMaxWidth(), singleLine = true
                     )
+                    OutlinedTextField(
+                        value = partsDesc, onValueChange = { partsDesc = it },
+                        label = { Text(t("قطعات تعویض‌شده (اختیاری)", "Replaced parts (optional)")) },
+                        modifier = Modifier.fillMaxWidth(), singleLine = true
+                    )
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Box(modifier = Modifier.weight(1f)) {
+                            com.example.ui.components.AmountInputField(
+                                value = partsCostStr,
+                                onValueChange = { partsCostStr = it },
+                                label = t("مبلغ قطعات", "Parts cost"),
+                                currency = currency,
+                                isPersian = isPersian
+                            )
+                        }
+                        Box(modifier = Modifier.weight(1f)) {
+                            com.example.ui.components.AmountInputField(
+                                value = laborCostStr,
+                                onValueChange = { laborCostStr = it },
+                                label = t("اجرت تعمیر", "Labor cost"),
+                                currency = currency,
+                                isPersian = isPersian
+                            )
+                        }
+                    }
+                    val partsCost = com.example.ui.components.parseGroupedAmount(partsCostStr)
+                    val laborCost = com.example.ui.components.parseGroupedAmount(laborCostStr)
+                    val totalCost = partsCost + laborCost
+                    Text(
+                        "${t("مبلغ کل فاکتور:", "Invoice total:")} ${formatAmount(totalCost)} $currency",
+                        fontSize = 11.5.sp, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary
+                    )
+                    OutlinedTextField(
+                        value = warranty, onValueChange = { warranty = it },
+                        label = { Text(t("گارانتی تعمیر (مثلاً ۳ ماه — اختیاری)", "Warranty (optional)")) },
+                        modifier = Modifier.fillMaxWidth(), singleLine = true
+                    )
+                    com.example.ui.components.JalaliDateField(
+                        timestamp = serviceDate,
+                        onDateSelected = { serviceDate = it },
+                        isPersian = isPersian,
+                        label = t("تاریخ سرویس", "Service date"),
+                        formatDate = { viewModel.formatDate(it) }
+                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(checked = hasNextService, onCheckedChange = { hasNextService = it })
+                        Text(t("یادآوری سرویس بعدی", "Next service reminder"), fontSize = 11.sp)
+                    }
+                    if (hasNextService) {
+                        com.example.ui.components.JalaliDateField(
+                            timestamp = nextServiceDate,
+                            onDateSelected = { nextServiceDate = it },
+                            isPersian = isPersian,
+                            label = t("تاریخ سرویس بعدی", "Next service date"),
+                            formatDate = { viewModel.formatDate(it) }
+                        )
+                    }
                     Button(
                         onClick = {
-                            val cost = costStr.trim().toLongOrNull() ?: 0L
                             if (equipment.isNotBlank()) {
-                                viewModel.addMaintenance(
+                                val packedDesc = listOfNotNull(
+                                    issue.trim().takeIf { it.isNotBlank() }?.let { "${t("ایراد", "Issue")}: $it" },
+                                    workDone.trim().takeIf { it.isNotBlank() }?.let { "${t("کار انجام‌شده", "Work done")}: $it" },
+                                    partsDesc.trim().takeIf { it.isNotBlank() }?.let { "${t("قطعات", "Parts")}: $it" },
+                                    partsCost.takeIf { it > 0 }?.let { "${t("مبلغ قطعات", "Parts cost")}: ${formatAmount(it)}" },
+                                    laborCost.takeIf { it > 0 }?.let { "${t("اجرت تعمیر", "Labor")}: ${formatAmount(it)}" },
+                                    warranty.trim().takeIf { it.isNotBlank() }?.let { "${t("گارانتی", "Warranty")}: $it" }
+                                ).joinToString(" | ")
+                                viewModel.addMaintenanceWithInvoice(
                                     equipment = equipment.trim(),
-                                    desc = desc.trim(),
-                                    cost = cost,
-                                    date = System.currentTimeMillis(),
-                                    nextCheck = null
+                                    desc = packedDesc,
+                                    cost = totalCost,
+                                    date = serviceDate,
+                                    nextCheck = if (hasNextService) nextServiceDate else null,
+                                    technician = techName.trim().ifBlank { null },
+                                    invoiceNum = null
                                 )
-                                equipment = ""; desc = ""; costStr = ""
+                                equipment = ""; issue = ""; workDone = ""; partsDesc = ""
+                                partsCostStr = ""; laborCostStr = ""; warranty = ""; techName = ""
+                                hasNextService = false
                                 showForm = false
                             }
                         },
                         modifier = Modifier.fillMaxWidth(),
                         enabled = equipment.isNotBlank()
-                    ) { Text(t("ثبت سرویس", "Save Service"), fontWeight = FontWeight.Bold) }
+                    ) { Text(t("ثبت فاکتور تعمیرات", "Save invoice"), fontWeight = FontWeight.Bold) }
                 }
             }
         }
@@ -2041,9 +2553,79 @@ fun MaintenanceScreen(viewModel: DentalViewModel) {
             item { Spacer(Modifier.height(12.dp)) }
         }
     }
-}
 
-/** اسکرول افقی برای ردیف چیپ‌ها — کمک‌تابع کوچک برای جلوگیری از تکرار. */
+    // «تکنسین جدید» — با مشخصات کامل؛ به‌عنوان طرف‌حساب فنی‌مهندسی ذخیره می‌شود
+    // تا در کل اپ (فاکتور تعمیرات و صورتحساب هزینه‌ها) منبع واحد باشد.
+    if (showTechForm) {
+        var tName by remember { mutableStateOf("") }
+        var tSpecialty by remember { mutableStateOf("") }
+        var tPhone by remember { mutableStateOf("") }
+        var tAddress by remember { mutableStateOf("") }
+        var tNotes by remember { mutableStateOf("") }
+        AlertDialog(
+            onDismissRequest = { showTechForm = false },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Icon(Icons.Default.PersonAdd, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                    Text(t("تکنسین / شرکت تعمیراتی جدید", "New technician / repair company"), fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                }
+            },
+            text = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 420.dp)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedTextField(
+                        value = tName, onValueChange = { tName = it },
+                        label = { Text(t("نام تکنسین / شرکت", "Technician / company name")) },
+                        modifier = Modifier.fillMaxWidth(), singleLine = true
+                    )
+                    OutlinedTextField(
+                        value = tSpecialty, onValueChange = { tSpecialty = it },
+                        label = { Text(t("تخصص (یونیت، اتوکلاو، تاسیسات…)", "Specialty")) },
+                        modifier = Modifier.fillMaxWidth(), singleLine = true
+                    )
+                    OutlinedTextField(
+                        value = tPhone, onValueChange = { tPhone = it },
+                        label = { Text(t("تلفن", "Phone")) },
+                        modifier = Modifier.fillMaxWidth(), singleLine = true
+                    )
+                    OutlinedTextField(
+                        value = tAddress, onValueChange = { tAddress = it },
+                        label = { Text(t("آدرس / محل سرویس", "Address / service location")) },
+                        modifier = Modifier.fillMaxWidth(), singleLine = true
+                    )
+                    OutlinedTextField(
+                        value = tNotes, onValueChange = { tNotes = it },
+                        label = { Text(t("یادداشت (اختیاری)", "Notes (optional)")) },
+                        modifier = Modifier.fillMaxWidth(), singleLine = true
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val composed = listOfNotNull(
+                            tSpecialty.trim().takeIf { it.isNotBlank() }?.let { "تخصص: $it" },
+                            tAddress.trim().takeIf { it.isNotBlank() }?.let { "آدرس: $it" },
+                            tNotes.trim().takeIf { it.isNotBlank() }
+                        ).joinToString(" | ")
+                        viewModel.addPartyAccount(PartySection.ENGINEERING, tName.trim(), tPhone.trim(), notes = composed)
+                        techName = tName.trim()
+                        showTechForm = false
+                    },
+                    enabled = tName.trim().isNotBlank()
+                ) { Text(t("ثبت تکنسین", "Save"), fontWeight = FontWeight.Bold) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showTechForm = false }) { Text(t("انصراف", "Cancel")) }
+            }
+        )
+    }
+}
 @Composable
 private fun Modifier.horizontalScrollCompat(): Modifier = this.horizontalScroll(rememberScrollState())
 
@@ -2196,20 +2778,20 @@ fun PersonsAccountsDialog(
                                 textStyle = androidx.compose.ui.text.TextStyle(fontSize = 12.sp)
                             )
 
-                            // ——— ماهیت شخص: بدهکار / بستانکار ———
+                            // ——— ماهیت شخص: بدهکار / بستانکار / عضو خانواده ———
                             Text(t("ماهیت شخص", "Person nature"), fontSize = 10.sp, color = Color.Gray)
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
-                                listOf(PersonNature.DEBTOR, PersonNature.CREDITOR).forEach { nature ->
+                                listOf(PersonNature.DEBTOR, PersonNature.CREDITOR, PersonNature.NONE).forEach { nature ->
                                     val isSel = newNature == nature
                                     FilterChip(
                                         selected = isSel,
                                         onClick = { newNature = nature },
                                         label = {
                                             Text(
-                                                nature.label(isPersian),
+                                                if (nature == PersonNature.NONE) t("عضو خانواده", "Family") else nature.label(isPersian),
                                                 fontSize = 10.5.sp,
                                                 fontWeight = if (isSel) FontWeight.Bold else FontWeight.Normal
                                             )
@@ -2323,7 +2905,40 @@ fun PersonsAccountsDialog(
                                 )
                             }
                         }
-                        items(personNames, key = { it }) { person ->
+                        // به‌درخواست کاربر: لیست در سه بخش — بدهکاران، بستانکاران، اعضای خانواده.
+                        fun natureOfPerson(name: String): PersonNature {
+                            val p = personProfiles.firstOrNull { it.fullName.equals(name, ignoreCase = true) }
+                            return when (p?.nature) {
+                                PersonNature.NONE -> PersonNature.NONE
+                                PersonNature.CREDITOR -> PersonNature.CREDITOR
+                                PersonNature.DEBTOR -> PersonNature.DEBTOR
+                                else -> {
+                                    val tot = personRecords[name].orEmpty().sumOf { it.amount } + (p?.openingBalance ?: 0L)
+                                    if (tot > 0L) PersonNature.CREDITOR else PersonNature.DEBTOR
+                                }
+                            }
+                        }
+                        listOf(
+                            Triple(t("بدهکاران", "Debtors"), PersonNature.DEBTOR, Color(0xFFC62828)),
+                            Triple(t("بستانکاران", "Creditors"), PersonNature.CREDITOR, Color(0xFF2E7D32)),
+                            Triple(t("اعضای خانواده", "Family members"), PersonNature.NONE, Color(0xFF1565C0))
+                        ).forEach { (secTitle, secNature, secColor) ->
+                            val secNames = personNames.filter { natureOfPerson(it) == secNature }
+                            if (secNames.isEmpty() && personNames.isEmpty()) return@forEach
+                            item(key = "psec-$secTitle") {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                    modifier = Modifier.fillMaxWidth().padding(top = 6.dp)
+                                ) {
+                                    Text(secTitle, fontWeight = FontWeight.Bold, fontSize = 12.sp, color = secColor)
+                                    Text(
+                                        if (isPersian) "«${secNames.size} نفر»" else "(${secNames.size})",
+                                        fontSize = 9.5.sp, color = Color.Gray
+                                    )
+                                }
+                            }
+                            items(secNames, key = { "psec-$secTitle-$it" }) { person ->
                             val recs = personRecords[person].orEmpty()
                             // پروندهٔ شخص (عنوان و ماهیت) — اگر شخص فقط از سوابق قدیمی
                             // آمده باشد، پرونده‌ای ندارد و مقادیر خالی می‌مانند.
@@ -2371,7 +2986,7 @@ fun PersonsAccountsDialog(
                                                     newFirstName = p.firstName
                                                     newLastName = p.lastName
                                                     newTitle = p.title
-                                                    newNature = if (p.nature == PersonNature.NONE) PersonNature.DEBTOR else p.nature
+                                                    newNature = p.nature
                                                     newOpeningStr = if (p.openingBalance > 0L) formatAmount(p.openingBalance) else ""
                                                     newPriorityStr = if (p.priority > 0) p.priority.toString() else ""
                                                     newStarred = p.isStarred
@@ -2392,6 +3007,7 @@ fun PersonsAccountsDialog(
                                 }
                             }
                         }
+                        }
                     }
                 } else {
                     // ——— ریز حساب شخص انتخاب‌شده (سوابق مستند) ———
@@ -2407,7 +3023,10 @@ fun PersonsAccountsDialog(
                             Text("👤 $currentPerson", fontWeight = FontWeight.Bold, fontSize = 13.sp)
                             val subtitle = listOfNotNull(
                                 currentProfile?.title?.takeIf { it.isNotBlank() },
-                                currentProfile?.nature?.takeIf { it != PersonNature.NONE }?.label(isPersian)
+                                currentProfile?.nature?.let { n ->
+                                    if (n == PersonNature.NONE) t("عضو خانواده — هزینه", "Family member — expense")
+                                    else n.label(isPersian)
+                                }
                             ).joinToString(" • ")
                             if (subtitle.isNotBlank()) {
                                 Text(subtitle, fontSize = 10.sp, color = MaterialTheme.colorScheme.primary)

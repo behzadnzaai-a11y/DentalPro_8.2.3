@@ -25,6 +25,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
@@ -67,6 +68,8 @@ import com.example.data.PersonalTransaction
 import com.example.data.PersonProfile
 import com.example.reports.ReportGenerators
 import com.example.reports.sharePdf
+import com.example.reports.shareImagesNativeChooser
+import com.example.reports.PdfReportBuilder
 import com.example.ui.DentalViewModel
 import com.example.ui.components.AmountInputField
 import com.example.ui.components.JalaliDateField
@@ -233,6 +236,47 @@ fun PersonalLedgerFullScreen(
                         }
                     }) {
                         Icon(Icons.Default.PictureAsPdf, contentDescription = t("گزارش PDF", "PDF report"), tint = MaterialTheme.colorScheme.error)
+                    }
+                    // «گزارش تصویری» — همان گزارش با جنریتور اصلی تصویرساز اپ (به‌درخواست کاربر)
+                    IconButton(onClick = {
+                        scope.launch {
+                            try {
+                                val file = withContext(Dispatchers.IO) {
+                                    PdfReportBuilder.renderNextAsImage = true
+                                    try {
+                                        if (mode == "PERSONS") {
+                                            val rows = personNames.map { name ->
+                                                val profile = personProfiles.firstOrNull { it.fullName.equals(name, ignoreCase = true) }
+                                                val signed = personSignedBalance(name, personRecords, profile)
+                                                ReportGenerators.PersonBalanceRow(name, signed)
+                                            }
+                                            ReportGenerators.personsBalancesReport(
+                                                context, settings.clinicName, settings.doctorName, accent, currency,
+                                                t("جاری", "Current"), rows, ::formatAmount
+                                            )
+                                        } else {
+                                            ReportGenerators.personalTransactionsReport(
+                                                context, settings.clinicName, settings.doctorName, accent, currency,
+                                                title,
+                                                if (dateFilterOn) "${viewModel.formatDate(dateFrom)} — ${viewModel.formatDate(dateTo)}" else t("کل دوره", "All time"),
+                                                filteredTx,
+                                                { viewModel.formatDate(it) }, ::formatAmount
+                                            )
+                                        }
+                                    } finally {
+                                        PdfReportBuilder.renderNextAsImage = false
+                                    }
+                                }
+                                shareImagesNativeChooser(
+                                    context, listOf(file),
+                                    t("اشتراک‌گذاری گزارش تصویری", "Share image report")
+                                )
+                            } catch (e: Exception) {
+                                Toast.makeText(context, e.localizedMessage ?: t("خطا در تولید گزارش", "Report failed"), Toast.LENGTH_LONG).show()
+                            }
+                        }
+                    }) {
+                        Icon(Icons.Default.Image, contentDescription = t("گزارش تصویری", "Image report"), tint = MaterialTheme.colorScheme.secondary)
                     }
                 }
 
@@ -639,6 +683,18 @@ private fun ColumnScope.PersonsFullListSection(
         )
     }
 
+    // به‌درخواست کاربر: لیست اشخاص در سه بخش — بدهکاران، بستانکاران، اعضای خانواده.
+    fun natureOf(name: String): com.example.data.PersonNature {
+        val p = personProfiles.firstOrNull { it.fullName.equals(name, ignoreCase = true) }
+        return when (p?.nature) {
+            com.example.data.PersonNature.NONE -> com.example.data.PersonNature.NONE
+            com.example.data.PersonNature.CREDITOR -> com.example.data.PersonNature.CREDITOR
+            com.example.data.PersonNature.DEBTOR -> com.example.data.PersonNature.DEBTOR
+            else -> if (personSignedBalance(name, personRecords, p) > 0L) com.example.data.PersonNature.CREDITOR
+            else com.example.data.PersonNature.DEBTOR
+        }
+    }
+
     LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.weight(1f)) {
         item {
             Row(
@@ -651,6 +707,16 @@ private fun ColumnScope.PersonsFullListSection(
                     fontSize = 10.5.sp, color = Color.Gray,
                     modifier = Modifier.weight(1f)
                 )
+                // به‌درخواست کاربر: دکمهٔ مستقل «افزودن عضو خانواده» — عضو خانواده نه بدهکار
+                // است نه بستانکار؛ مبالغش به‌عنوان هزینه ثبت می‌شود (ماهیت NONE).
+                TextButton(onClick = {
+                    editingId = 0L; fFirst = ""; fLast = ""; fTitle = ""
+                    fNature = com.example.data.PersonNature.NONE; fOpeningStr = ""; fPriorityStr = ""; fStarred = false
+                    showForm = true
+                }) {
+                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(15.dp))
+                    Text(t("عضو خانواده", "Family member"), fontSize = 10.sp)
+                }
                 TextButton(onClick = {
                     editingId = 0L; fFirst = ""; fLast = ""; fTitle = ""
                     fNature = com.example.data.PersonNature.DEBTOR; fOpeningStr = ""; fPriorityStr = ""; fStarred = false
@@ -665,7 +731,11 @@ private fun ColumnScope.PersonsFullListSection(
             item {
                 Card(shape = RoundedCornerShape(12.dp)) {
                     Column(
-                        modifier = Modifier.padding(10.dp).verticalScroll(rememberScrollState()),
+                        // نکتهٔ مهم (رفع کرش): این Column داخل item یک LazyColumn است؛
+                        // verticalScroll تو در تو با LazyColumn هم‌جهت، در Compose باعث
+                        // IllegalStateException و بسته‌شدن برنامه هنگام باز شدن فرم
+                        // (دکمهٔ «ثبت شخص» و قلم ویرایش) می‌شد. اسکرول را خود LazyColumn می‌دهد.
+                        modifier = Modifier.padding(10.dp),
                         verticalArrangement = Arrangement.spacedBy(7.dp)
                     ) {
                         Text(
@@ -690,14 +760,30 @@ private fun ColumnScope.PersonsFullListSection(
                             modifier = Modifier.fillMaxWidth(), singleLine = true
                         )
                         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            listOf(com.example.data.PersonNature.DEBTOR, com.example.data.PersonNature.CREDITOR).forEach { nature ->
+                            // سه ماهیت: بدهکار، بستانکار، عضو خانواده (نه بدهکار نه بستانکار — هزینه)
+                            listOf(
+                                com.example.data.PersonNature.DEBTOR,
+                                com.example.data.PersonNature.CREDITOR,
+                                com.example.data.PersonNature.NONE
+                            ).forEach { nature ->
                                 FilterChip(
                                     selected = fNature == nature,
                                     onClick = { fNature = nature },
-                                    label = { Text(nature.label(isPersian), fontSize = 10.sp) },
+                                    label = {
+                                        Text(
+                                            if (nature == com.example.data.PersonNature.NONE) t("عضو خانواده", "Family") else nature.label(isPersian),
+                                            fontSize = 10.sp
+                                        )
+                                    },
                                     modifier = Modifier.weight(1f)
                                 )
                             }
+                        }
+                        if (fNature == com.example.data.PersonNature.NONE) {
+                            Text(
+                                t("عضو خانواده نه بدهکار است نه بستانکار — مبالغ ثبت‌شده برای او به‌عنوان هزینه منظور می‌شود.", "Family member is neither debtor nor creditor — amounts are recorded as expenses."),
+                                fontSize = 9.5.sp, color = MaterialTheme.colorScheme.primary
+                            )
                         }
                         AmountInputField(
                             value = fOpeningStr,
@@ -755,15 +841,42 @@ private fun ColumnScope.PersonsFullListSection(
             }
         }
         item {
-            val creditors = orderedPersons.count { p ->
-                personSignedBalance(p, personRecords, personProfiles.firstOrNull { it.fullName.equals(p, ignoreCase = true) }) > 0L
-            }
+            val debtorCount = orderedPersons.count { natureOf(it) == com.example.data.PersonNature.DEBTOR }
+            val creditorCount = orderedPersons.count { natureOf(it) == com.example.data.PersonNature.CREDITOR }
+            val familyCount = orderedPersons.size - debtorCount - creditorCount
             Text(
-                t("${orderedPersons.size} شخص  |  بستانکار: $creditors  |  بدهکار: ${orderedPersons.size - creditors}", "${orderedPersons.size} persons | creditors: $creditors | debtors: ${orderedPersons.size - creditors}"),
+                t(
+                    "${orderedPersons.size} شخص  |  بدهکاران: $debtorCount  |  بستانکاران: $creditorCount  |  اعضای خانواده: $familyCount",
+                    "${orderedPersons.size} persons | debtors: $debtorCount | creditors: $creditorCount | family: $familyCount"
+                ),
                 fontSize = 10.5.sp, color = Color.Gray, fontWeight = FontWeight.Bold
             )
         }
-        items(orderedPersons, key = { "person${it}" }) { name ->
+        listOf(
+            Triple(t("بدهکاران", "Debtors"), com.example.data.PersonNature.DEBTOR, Color(0xFFC62828)),
+            Triple(t("بستانکاران", "Creditors"), com.example.data.PersonNature.CREDITOR, Color(0xFF2E7D32)),
+            Triple(t("اعضای خانواده", "Family members"), com.example.data.PersonNature.NONE, Color(0xFF1565C0))
+        ).forEach { (secTitle, secNature, secColor) ->
+            val secNames = orderedPersons.filter { natureOf(it) == secNature }
+            item(key = "sechdr-$secTitle") {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.fillMaxWidth().padding(top = 6.dp)
+                ) {
+                    Text(secTitle, fontWeight = FontWeight.Bold, fontSize = 12.5.sp, color = secColor)
+                    Text(
+                        if (isPersian) "«${secNames.size} نفر»" else "(${secNames.size})",
+                        fontSize = 10.sp, color = Color.Gray
+                    )
+                }
+            }
+            if (secNames.isEmpty()) {
+                item(key = "secempty-$secTitle") {
+                    Text(t("موردی ثبت نشده است.", "Nothing recorded."), fontSize = 10.sp, color = Color.Gray)
+                }
+            }
+            items(secNames, key = { "person-$secTitle-$it" }) { name ->
             val profile = personProfiles.firstOrNull { it.fullName.equals(name, ignoreCase = true) }
             val records = personRecords[name].orEmpty()
                 .filter { !dateFilterOn || (it.date >= dateFrom && it.date < dateTo + dayMs) }
@@ -790,7 +903,7 @@ private fun ColumnScope.PersonsFullListSection(
                                     fFirst = profile?.firstName.orEmpty()
                                     fLast = profile?.lastName.orEmpty()
                                     fTitle = profile?.title.orEmpty()
-                                    fNature = profile?.nature?.takeIf { it != com.example.data.PersonNature.NONE } ?: com.example.data.PersonNature.DEBTOR
+                                    fNature = profile?.nature ?: com.example.data.PersonNature.DEBTOR
                                     fOpeningStr = if ((profile?.openingBalance ?: 0L) > 0L) formatAmount(profile!!.openingBalance) else ""
                                     fPriorityStr = (profile?.priority ?: 0).takeIf { it > 0 }?.toString() ?: ""
                                     fStarred = profile?.isStarred == true
@@ -810,7 +923,10 @@ private fun ColumnScope.PersonsFullListSection(
                         Spacer(Modifier.height(6.dp))
                         val subtitle = listOfNotNull(
                             profile?.title?.takeIf { it.isNotBlank() },
-                            profile?.nature?.label(isPersian)?.takeIf { profile.nature != com.example.data.PersonNature.NONE },
+                            profile?.nature?.let { n ->
+                                if (n == com.example.data.PersonNature.NONE) t("عضو خانواده — هزینه", "Family member — expense")
+                                else n.label(isPersian)
+                            },
                             (profile?.openingBalance ?: 0L).takeIf { it != 0L }?.let { t("مبلغ اولیه: ${formatAmount(it)} $currency", "Opening: ${formatAmount(it)} $currency") }
                         ).joinToString(" • ")
                         if (subtitle.isNotBlank()) Text(subtitle, fontSize = 9.5.sp, color = MaterialTheme.colorScheme.primary)
@@ -843,6 +959,7 @@ private fun ColumnScope.PersonsFullListSection(
                     }
                 }
             }
+        }
         }
         item { Spacer(Modifier.height(12.dp)) }
     }

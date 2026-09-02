@@ -332,12 +332,13 @@ enum class PartySection(val key: String, val faTitle: String, val enTitle: Strin
     ENGINEERING("ENGINEERING", "فنی مهندسی و تعمیرات", "Engineering & Maintenance"),
     STORE("STORE", "فروشگاه مواد دندانپزشکی", "Dental Supply Store"),
     RUNNING("RUNNING", "هزینه‌های جاری مطب", "Running Costs"),
+    SALARY("SALARY", "حقوق پرسنل", "Payroll"),
     OTHER("OTHER", "سایر هزینه‌های مطب", "Other Expenses");
 
     fun title(isPersian: Boolean) = if (isPersian) faTitle else enTitle
 
     companion object {
-        val primary = listOf(LAB, ENGINEERING, STORE, RUNNING)
+        val primary = listOf(LAB, ENGINEERING, STORE, RUNNING, SALARY)
 
         fun fromKey(key: String?): PartySection =
             entries.firstOrNull { it.key == key?.trim() } ?: OTHER
@@ -485,7 +486,8 @@ fun partyDisplayLabel(title: String?, name: String?): String {
     val t = title.orEmpty().trim()
     val n = name.orEmpty().trim()
     return when {
-        t.isNotBlank() && n.isNotBlank() && !t.equals(n, ignoreCase = true) -> "$t ($n)"
+        // به‌درخواست کاربر: بدون پرانتز — «لابراتوار ایکس» به‌جای «لابراتوار (ایکس)»
+        t.isNotBlank() && n.isNotBlank() && !t.equals(n, ignoreCase = true) -> "$t $n"
         t.isNotBlank() -> t
         else -> n
     }

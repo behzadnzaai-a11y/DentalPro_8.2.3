@@ -181,31 +181,50 @@ fun ReportsCenterScreen(viewModel: DentalViewModel, isPersian: Boolean, onBack: 
 
         LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.weight(1f)) {
             items(reports) { report ->
-                ReportRow(
-                    report = report,
-                    isPersian = isPersian,
-                    onGenerate = {
-                        if (report.id == "installments") {
-                            showInstallmentsDialog = true
-                        } else if (!isGenerating) {
-                            scope.launch {
-                                isGenerating = true
-                                try {
-                                    val file = withContext(Dispatchers.IO) { report.generate(ctx2) }
-                                    generatedFile = file
-                                    generatedTitle = report.title
-                                } catch (error: Exception) {
-                                    android.widget.Toast.makeText(
-                                        context,
-                                        error.localizedMessage ?: if (isPersian) "خطا در تولید گزارش" else "Report generation failed",
-                                        android.widget.Toast.LENGTH_LONG
-                                    ).show()
-                                } finally {
-                                    isGenerating = false
+                fun runGenerate(asImage: Boolean) {
+                    if (report.id == "installments") {
+                        showInstallmentsDialog = true
+                    } else if (!isGenerating) {
+                        scope.launch {
+                            isGenerating = true
+                            try {
+                                val file = withContext(Dispatchers.IO) {
+                                    if (asImage) {
+                                        // «گزارش تصویری» — همان محتوا با جنریتور اصلی تصویرساز اپ
+                                        com.example.reports.PdfReportBuilder.renderNextAsImage = true
+                                        try {
+                                            report.generate(ctx2)
+                                        } finally {
+                                            com.example.reports.PdfReportBuilder.renderNextAsImage = false
+                                        }
+                                    } else {
+                                        report.generate(ctx2)
+                                    }
                                 }
+                                generatedFile = file
+                                generatedTitle = report.title
+                            } catch (error: Exception) {
+                                android.widget.Toast.makeText(
+                                    context,
+                                    error.localizedMessage ?: if (isPersian) "خطا در تولید گزارش" else "Report generation failed",
+                                    android.widget.Toast.LENGTH_LONG
+                                ).show()
+                            } finally {
+                                isGenerating = false
                             }
                         }
                     }
+                }
+                // به‌درخواست کاربر: «گزارش تصویری» کنار PDF فقط برای گزارش‌های مالی و اشخاص
+                val imageCapable = report.id in setOf(
+                    "income", "debtors", "cheques", "profit_loss", "tax",
+                    "bank", "draw", "children", "vendors", "dashboard"
+                )
+                ReportRow(
+                    report = report,
+                    isPersian = isPersian,
+                    onGenerate = { runGenerate(asImage = false) },
+                    onGenerateImage = if (imageCapable) ({ runGenerate(asImage = true) }) else null
                 )
             }
         }
@@ -240,17 +259,28 @@ fun ReportsCenterScreen(viewModel: DentalViewModel, isPersian: Boolean, onBack: 
                 )
             },
             confirmButton = {
+                val isImageFile = fileToActOn.extension.lowercase() in listOf("png", "jpg", "jpeg", "webp")
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    TextButton(onClick = {
-                        printPdfFile(context, fileToActOn, generatedTitle)
-                        generatedFile = null
-                    }) {
-                        Icon(Icons.Default.Print, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(if (isPersian) "چاپ" else "Print")
+                    if (!isImageFile) {
+                        TextButton(onClick = {
+                            printPdfFile(context, fileToActOn, generatedTitle)
+                            generatedFile = null
+                        }) {
+                            Icon(Icons.Default.Print, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(if (isPersian) "چاپ" else "Print")
+                        }
                     }
                     TextButton(onClick = {
-                        if (!isGenerating) {
+                        if (isImageFile) {
+                            // «گزارش تصویری» — خودِ فایل تصویر مستقیم به اشتراک گذاشته می‌شود
+                            shareImagesNativeChooser(
+                                context,
+                                listOf(fileToActOn),
+                                if (isPersian) "اشتراک‌گذاری گزارش تصویری" else "Share image report"
+                            )
+                            generatedFile = null
+                        } else if (!isGenerating) {
                             scope.launch {
                                 isGenerating = true
                                 try {
@@ -282,15 +312,20 @@ fun ReportsCenterScreen(viewModel: DentalViewModel, isPersian: Boolean, onBack: 
                     }) {
                         Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(if (isPersian) "واتساپ (تصویر کامل)" else "WhatsApp (Full Card)")
+                        Text(
+                            if (isImageFile) (if (isPersian) "اشتراک تصویر" else "Share image")
+                            else if (isPersian) "واتساپ (تصویر کامل)" else "WhatsApp (Full Card)"
+                        )
                     }
-                    TextButton(onClick = {
-                        sharePdfToWhatsApp(context, fileToActOn)
-                        generatedFile = null
-                    }) {
-                        Icon(Icons.Default.PictureAsPdf, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(if (isPersian) "واتساپ (PDF)" else "WhatsApp (PDF)")
+                    if (!isImageFile) {
+                        TextButton(onClick = {
+                            sharePdfToWhatsApp(context, fileToActOn)
+                            generatedFile = null
+                        }) {
+                            Icon(Icons.Default.PictureAsPdf, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(if (isPersian) "واتساپ (PDF)" else "WhatsApp (PDF)")
+                        }
                     }
                 }
             },
@@ -658,7 +693,12 @@ fun PatientSendActionsRow(
 }
 
 @Composable
-private fun ReportRow(report: ReportEntry, isPersian: Boolean, onGenerate: () -> Unit) {
+private fun ReportRow(
+    report: ReportEntry,
+    isPersian: Boolean,
+    onGenerate: () -> Unit,
+    onGenerateImage: (() -> Unit)? = null
+) {
     Card(
         modifier = Modifier.fillMaxWidth().clickable { onGenerate() },
         shape = RoundedCornerShape(12.dp),
@@ -682,6 +722,17 @@ private fun ReportRow(report: ReportEntry, isPersian: Boolean, onGenerate: () ->
             Column(modifier = Modifier.weight(1f)) {
                 Text(report.title, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                 Text(report.desc, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+            }
+            // «گزارش تصویری» — به‌درخواست کاربر کنار PDF برای گزارش‌های مالی و اشخاص
+            if (onGenerateImage != null) {
+                IconButton(onClick = onGenerateImage, modifier = Modifier.size(32.dp)) {
+                    Icon(
+                        Icons.Default.Image,
+                        contentDescription = if (isPersian) "گزارش تصویری" else "Image report",
+                        tint = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
             Icon(Icons.Default.PictureAsPdf, contentDescription = null, tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f), modifier = Modifier.size(20.dp))
         }

@@ -49,7 +49,10 @@ function normalizePhone(raw: string): string | null {
 // ارسال با SMS.ir
 // ---------------------------------------------------------------------------
 async function sendViaSmsIr(phone: string, code: string): Promise<void> {
-  const apiKey = Deno.env.get("SMSIR_API_KEY");
+  // کلید API سرویس SMS.ir — اول secret ست‌شده در Supabase، وگرنه کلید پیش‌فرضِ پروژه.
+  // برای override:  supabase secrets set SMSIR_API_KEY=xxxx
+  const apiKey = Deno.env.get("SMSIR_API_KEY") ??
+    "L6zbuEJRyqtBgg1rA3kPQZJjtYDcqQKcUvRK9mYiS2BBLBZS";
   if (!apiKey) {
     throw new Error("SMS_NOT_CONFIGURED");
   }

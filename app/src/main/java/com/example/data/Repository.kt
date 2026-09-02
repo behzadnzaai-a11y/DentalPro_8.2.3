@@ -276,16 +276,15 @@ class DentalRepository(val database: AppDatabase) {
     // Clinic Expenses — در مدل طرف‌حساب، هر رکورد یک «فاکتور» (بدهی ما) است.
     val allExpenses: Flow<List<ClinicExpense>> = database.clinicExpenseDao().getAllExpenses()
 
-    /** تولید شمارهٔ فاکتورِ پشت‌سرهمِ per-party (مثل LAB-A-0001) و به‌روزکردن شمارندهٔ طرف‌حساب. */
+    /** تولید شمارهٔ فاکتورِ پشت‌سرهمِ per-party — به‌درخواست کاربر بدون کدهای LABA/ENGB (فقط شمارهٔ ترتیبی). */
     private suspend fun assignInvoiceNumber(expense: ClinicExpense): ClinicExpense {
         val partyId = expense.partyAccountId ?: return expense
         val party = database.partyAccountDao().getById(partyId) ?: return expense
         val seq = party.invoiceSeq + 1
         database.partyAccountDao().insertPartyAccount(party.copy(invoiceSeq = seq, updatedAt = System.currentTimeMillis()))
         enqueueSyncOp("party_accounts", party.syncId, "UPSERT")
-        val code = party.code.ifBlank { party.section }
         return expense.copy(
-            invoiceNumber = if (expense.invoiceNumber.isBlank()) "$code-${seq.toString().padStart(4, '0')}" else expense.invoiceNumber
+            invoiceNumber = if (expense.invoiceNumber.isBlank()) "فاکتور ${seq.toString().padStart(4, '0')}" else expense.invoiceNumber
         )
     }
 
@@ -361,6 +360,8 @@ class DentalRepository(val database: AppDatabase) {
             occurredAt = payment.date,
             description = payment.note.ifBlank { "Expense payment" },
             createdAt = previous?.createdAt?.takeIf { it != 0L } ?: System.currentTimeMillis(),
+            // حفظ syncId قبلی — جلوگیری از برخورد با ایندکس یکتای (source_type, source_id) در سرور.
+            syncId = previous?.syncId ?: java.util.UUID.randomUUID().toString(),
         )
         database.financialLedgerDao().upsert(ledgerEntry)
         enqueueSyncOp("expense_payments", enriched.syncId, "UPSERT")
@@ -443,6 +444,7 @@ class DentalRepository(val database: AppDatabase) {
         PartySection.ENGINEERING -> "ENG"
         PartySection.STORE -> "STORE"
         PartySection.RUNNING -> "RUN"
+        PartySection.SALARY -> "SAL"
         PartySection.OTHER -> "OTHER"
     }
 
@@ -472,6 +474,52 @@ class DentalRepository(val database: AppDatabase) {
                 database.personalSubAccountDao().insertSubAccount(
                     sub.copy(parentName = target, updatedAt = System.currentTimeMillis())
                 )
+                enqueueSyncOp("personal_sub_accounts", sub.syncId, "UPSERT")
+            }
+
+        // ——— ادغام دو سرفصلِ «هزینه های اداری» (درخواست کاربر: باید یکی شوند) ———
+        // seed قدیمی پرمیس این سرفصل را بدون نیم‌فاصله («هزینه های اداری») می‌ساخت و
+        // مهاجرتِ بالا نسخهٔ با نیم‌فاصله («هزینه‌های اداری») را — نتیجه دو سرفصلِ
+        // ظاهراً یکسان در لیست. اینجا هر واریانس (نیم‌فاصله/فاصله/ی عربی) به شکل
+        // استاندارد یکی می‌شود و برگ‌های هم‌نامِ تکراری زیر همان سرفصل حذفِ نرم می‌شوند.
+        fun normalizeHeading(s: String): String = s
+            .replace('\u200C', ' ')       // نیم‌فاصله ← فاصله
+            .replace('\u064A', '\u06CC')  // ي عربی ← ی فارسی
+            .replace('\u0643', '\u06A9')  // ك عربی ← ک فارسی
+            .replace(Regex("\\s+"), " ")
+            .trim()
+
+        val canonicalKey = normalizeHeading(target)
+        val all = database.personalSubAccountDao().getAllList()
+
+        // ۱) یکسان‌سازی نام والد روی همهٔ برگ‌های زیر هر واریانسِ این سرفصل
+        all.filter {
+            !it.isDeleted && it.category != com.example.data.PERSONS_CATEGORY &&
+                normalizeHeading(it.parentName) == canonicalKey && it.parentName != target
+        }.forEach { sub ->
+            database.personalSubAccountDao().insertSubAccount(
+                sub.copy(parentName = target, updatedAt = System.currentTimeMillis())
+            )
+            enqueueSyncOp("personal_sub_accounts", sub.syncId, "UPSERT")
+        }
+
+        // ۲) حذفِ نرمِ برگ‌های تکراریِ هم‌نام زیر سرفصلِ ادغام‌شده (قدیمی‌ترین می‌ماند).
+        //    تراکنش‌ها با «نام برگ» وصل‌اند و نام تغییری نمی‌کند، پس هیچ سندی یتیم نمی‌شود.
+        database.personalSubAccountDao().getAllList()
+            .filter {
+                !it.isDeleted && it.category != com.example.data.PERSONS_CATEGORY &&
+                    normalizeHeading(it.parentName) == canonicalKey
+            }
+            .groupBy { normalizeHeading(it.name) }
+            .values
+            .filter { it.size > 1 }
+            .forEach { dupes ->
+                dupes.sortedBy { it.id }.drop(1).forEach { extra ->
+                    database.personalSubAccountDao().insertSubAccount(
+                        extra.copy(isDeleted = true, updatedAt = System.currentTimeMillis())
+                    )
+                    enqueueSyncOp("personal_sub_accounts", extra.syncId, "UPSERT")
+                }
             }
     }
 
@@ -589,6 +637,8 @@ class DentalRepository(val database: AppDatabase) {
             occurredAt = tx.date,
             description = tx.description,
             createdAt = previous?.createdAt?.takeIf { it != 0L } ?: System.currentTimeMillis(),
+            // حفظ syncId قبلی — جلوگیری از برخورد با ایندکس یکتای (source_type, source_id) در سرور.
+            syncId = previous?.syncId ?: java.util.UUID.randomUUID().toString(),
         )
         database.financialLedgerDao().upsert(ledgerEntry)
         enqueueSyncOp("personal_transactions", enriched.syncId, "UPSERT")
@@ -675,7 +725,20 @@ class DentalRepository(val database: AppDatabase) {
     // Settings — single-row table (id = 1).
     val clinicSettings: Flow<ClinicSettings?> = database.clinicSettingsDao().getSettings()
     suspend fun getSettingsOnce(): ClinicSettings? = database.clinicSettingsDao().getSettingsOnce()
-    suspend fun insertSettings(settings: ClinicSettings): Long = database.clinicSettingsDao().insertSettings(settings).also { enqueueSyncOp("clinic_settings", settings.syncId, "UPSERT") }
+    suspend fun insertSettings(settings: ClinicSettings): Long = database.withTransaction {
+        // clinic_settings تک‌ردیفی است (id = 1). syncId ردیفِ موجود همیشه حفظ می‌شود؛
+        // در غیر این صورت هر ذخیره/لاگین یک syncId تازه می‌سازد و در Supabase
+        // (که PK آن sync_id است) هر بار یک ردیف جدید ثبت می‌شود — رفع باگ
+        // «تکرار ردیف‌های clinic_settings با هر بار لاگین».
+        val existing = database.clinicSettingsDao().getSettingsOnce()
+        val effective = settings.copy(
+            id = 1,
+            syncId = existing?.syncId?.takeIf { it.isNotBlank() } ?: settings.syncId
+        )
+        val rowId = database.clinicSettingsDao().insertSettings(effective)
+        enqueueSyncOp("clinic_settings", effective.syncId, "UPSERT")
+        rowId
+    }
 
     suspend fun updateGlobalFontScale(index: Int) {
         database.clinicSettingsDao().updateGlobalFontScale(index)
@@ -786,6 +849,11 @@ class DentalRepository(val database: AppDatabase) {
                 "Patient payment (${payment.type})"
             },
             createdAt = existing?.createdAt?.takeIf { it != 0L } ?: System.currentTimeMillis(),
+            // syncId ردیفِ قبلی باید حفظ شود؛ در غیر این صورت هر ویرایشِ پرداخت یک
+            // UUID تازه می‌سازد و upsert سرور (on_conflict=sync_id) به ایندکس یکتای
+            // (source_type, source_id) می‌خورد، push بعد از ۵ تلاش دور انداخته می‌شود
+            // و ردیفِ دفترکل در Supabase برای همیشه روی نسخهٔ اول فریز می‌ماند.
+            syncId = existing?.syncId ?: java.util.UUID.randomUUID().toString(),
         )
         database.financialLedgerDao().upsert(ledgerEntry)
         enqueueSyncOp("financial_ledger", ledgerEntry.syncId, "UPSERT")
